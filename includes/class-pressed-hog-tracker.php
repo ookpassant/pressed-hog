@@ -57,14 +57,24 @@ class Pressed_Hog_Tracker {
 		$options        = pressed_hog_get_options();
 		$consent_gated  = 'none' !== $options['consent_mode'];
 
+		$api_host = $options['api_host'];
+		$ui_host  = null;
+		if ( Pressed_Hog_Proxy::is_enabled() ) {
+			$api_host = Pressed_Hog_Proxy::base_url();
+			$ui_host  = pressed_hog_app_host();
+		}
+
 		$config = array(
-			'api_host'                  => $options['api_host'],
+			'api_host'                  => $api_host,
 			'capture_pageview'          => (bool) $options['capture_pageviews'],
 			'autocapture'               => (bool) $options['autocapture'],
 			'disable_session_recording' => empty( $options['session_recording'] ),
 			'disable_surveys'           => empty( $options['enable_surveys'] ),
 			'person_profiles'           => 'identified_only',
 		);
+		if ( $ui_host ) {
+			$config['ui_host'] = $ui_host;
+		}
 		if ( $consent_gated ) {
 			$config['opt_out_capturing_by_default'] = true;
 		}

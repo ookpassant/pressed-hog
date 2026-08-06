@@ -127,6 +127,36 @@ class Pressed_Hog_Settings {
 		// Integrations.
 		add_settings_section( 'pressed_hog_integrations', __( 'Integrations', 'pressed-hog' ), '__return_null', 'pressed-hog' );
 		self::add_field( 'woocommerce_events', __( 'WooCommerce events', 'pressed-hog' ), 'pressed_hog_integrations', 'render_woocommerce' );
+
+		// Reverse proxy.
+		add_settings_section(
+			'pressed_hog_proxy',
+			__( 'Reverse proxy', 'pressed-hog' ),
+			function () {
+				printf(
+					'<p>%s</p>',
+					esc_html__( 'Serve PostHog through your own domain so ad-blockers that filter PostHog’s domains can’t block tracking. Requests are relayed server-side by your WordPress site.', 'pressed-hog' )
+				);
+			},
+			'pressed-hog'
+		);
+		self::add_field( 'proxy_enabled', __( 'Enable reverse proxy', 'pressed-hog' ), 'pressed_hog_proxy', 'render_proxy' );
+
+		// Dashboard & stats.
+		add_settings_section(
+			'pressed_hog_dashboard',
+			__( 'In-dashboard analytics', 'pressed-hog' ),
+			function () {
+				printf(
+					'<p>%s</p>',
+					esc_html__( 'The PostHog admin page and dashboard widget read stats via PostHog’s Query API, which needs a personal API key (separate from the project key above) and your numeric project ID.', 'pressed-hog' )
+				);
+			},
+			'pressed-hog'
+		);
+		self::add_field( 'personal_api_key', __( 'Personal API key', 'pressed-hog' ), 'pressed_hog_dashboard', 'render_personal_key' );
+		self::add_field( 'project_id', __( 'Project ID', 'pressed-hog' ), 'pressed_hog_dashboard', 'render_project_id' );
+		self::add_field( 'embed_url', __( 'Embedded dashboard (optional)', 'pressed-hog' ), 'pressed_hog_dashboard', 'render_embed_url' );
 	}
 
 	private static function add_field( $id, $title, $section, $callback, $args = array() ) {
@@ -305,6 +335,71 @@ class Pressed_Hog_Settings {
 		);
 	}
 
+	public static function render_proxy() {
+		$options = pressed_hog_get_options();
+		printf(
+			'<label><input type="checkbox" name="%1$s[proxy_enabled]" value="1" %2$s /> %3$s</label>',
+			esc_attr( PRESSED_HOG_OPTION ),
+			checked( ! empty( $options['proxy_enabled'] ), true, false ),
+			esc_html__( 'Route tracking through this site', 'pressed-hog' )
+		);
+		printf(
+			'<p style="margin-top:8px;"><label>%s <code>%s/</code><input type="text" class="code" name="%s[proxy_slug]" value="%s" /></label></p>',
+			esc_html__( 'Path prefix:', 'pressed-hog' ),
+			esc_html( untrailingslashit( home_url() ) ),
+			esc_attr( PRESSED_HOG_OPTION ),
+			esc_attr( $options['proxy_slug'] )
+		);
+		$notes = __( 'Avoid words like “posthog” or “analytics” in the prefix — path-based blockers look for them. Each event passes through PHP on your server; that is fine for most sites but adds load on very high-traffic ones.', 'pressed-hog' );
+		if ( ! get_option( 'permalink_structure' ) ) {
+			$notes .= ' ' . __( 'Note: the proxy requires pretty permalinks (Settings → Permalinks, anything except “Plain”).', 'pressed-hog' );
+		}
+		printf( '<p class="description">%s</p>', esc_html( $notes ) );
+	}
+
+	public static function render_personal_key() {
+		$options = pressed_hog_get_options();
+		printf(
+			'<input type="password" class="regular-text code" name="%s[personal_api_key]" value="%s" placeholder="phx_..." autocomplete="new-password" />',
+			esc_attr( PRESSED_HOG_OPTION ),
+			esc_attr( $options['personal_api_key'] )
+		);
+		printf(
+			'<p class="description">%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
+			esc_html__( 'Create one with read-only “Query” scope under', 'pressed-hog' ),
+			esc_url( pressed_hog_app_host() . '/settings/user-api-keys' ),
+			esc_html__( 'PostHog → Settings → Personal API keys ↗', 'pressed-hog' )
+		);
+	}
+
+	public static function render_project_id() {
+		$options = pressed_hog_get_options();
+		printf(
+			'<input type="number" class="small-text" name="%s[project_id]" value="%s" min="0" />',
+			esc_attr( PRESSED_HOG_OPTION ),
+			esc_attr( $options['project_id'] ? $options['project_id'] : '' )
+		);
+		printf(
+			'<p class="description">%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
+			esc_html__( 'The numeric ID shown at', 'pressed-hog' ),
+			esc_url( pressed_hog_app_host() . '/settings/project' ),
+			esc_html__( 'PostHog → Settings → Project ↗', 'pressed-hog' )
+		);
+	}
+
+	public static function render_embed_url() {
+		$options = pressed_hog_get_options();
+		printf(
+			'<input type="url" class="regular-text code" name="%s[embed_url]" value="%s" placeholder="https://us.posthog.com/shared/…" />',
+			esc_attr( PRESSED_HOG_OPTION ),
+			esc_attr( $options['embed_url'] )
+		);
+		printf(
+			'<p class="description">%s</p>',
+			esc_html__( 'Paste a PostHog shared-dashboard link (Dashboard → Share) to embed the full dashboard on the PostHog admin page.', 'pressed-hog' )
+		);
+	}
+
 	/* ---------------------------------------------------------------------
 	 * Sanitization
 	 * ------------------------------------------------------------------- */
@@ -348,6 +443,21 @@ class Pressed_Hog_Settings {
 		if ( '' === $clean['banner_decline'] ) {
 			$clean['banner_decline'] = $defaults['banner_decline'];
 		}
+
+		$clean['proxy_enabled'] = empty( $input['proxy_enabled'] ) ? 0 : 1;
+		$slug                   = sanitize_title( $input['proxy_slug'] ?? '' );
+		$clean['proxy_slug']    = $slug ? $slug : $defaults['proxy_slug'];
+
+		$old = pressed_hog_get_options();
+		if ( $clean['proxy_enabled'] !== (int) $old['proxy_enabled'] || $clean['proxy_slug'] !== $old['proxy_slug'] ) {
+			update_option( Pressed_Hog_Proxy::FLUSH_FLAG, 1 );
+		}
+
+		$clean['personal_api_key'] = sanitize_text_field( $input['personal_api_key'] ?? '' );
+		$clean['project_id']       = absint( $input['project_id'] ?? 0 );
+
+		$embed              = esc_url_raw( trim( $input['embed_url'] ?? '' ) );
+		$clean['embed_url'] = ( $embed && ( false !== strpos( $embed, '/shared/' ) || false !== strpos( $embed, '/embedded/' ) ) ) ? $embed : '';
 
 		return $clean;
 	}

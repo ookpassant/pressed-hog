@@ -4,7 +4,7 @@ Tags: posthog, analytics, feature flags, woocommerce, cookie consent
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,8 @@ Pressed Hog installs [PostHog](https://posthog.com) product analytics on your Wo
 * Consent handling with three modes: no gate, a built-in cookie banner, or integration with an external consent plugin via a cookie or JavaScript API.
 * WooCommerce events: `product_added_to_cart`, `checkout_started`, and `order_completed` (with order totals and line items, deduplicated per order).
 * Server-side feature flags: a `[posthog_flag key="my-flag"]…[/posthog_flag]` shortcode to gate content, plus `pressed_hog_is_feature_enabled()` and `pressed_hog_get_feature_flag()` template helpers.
+* Reverse proxy: serve PostHog through your own domain (e.g. `yoursite.com/phog/…`) so ad-blockers that filter PostHog's domains can't block tracking.
+* In-dashboard analytics: a PostHog admin page with pageviews, unique visitors, a traffic chart, top pages, referrers, and devices — plus a WordPress dashboard widget and an optional embedded PostHog shared dashboard. Requires a personal API key with read-only Query scope.
 
 **Consent integration for developers**
 
@@ -60,7 +62,19 @@ Yes — choose "Self-hosted / custom" as the host and enter your instance URL.
 
 Only what you enable. The tracking snippet runs in visitors' browsers; the only server-side request is feature flag evaluation (when you use the shortcode or helpers), sent to your configured PostHog host.
 
+= Does the reverse proxy work on any host? =
+
+It needs pretty permalinks enabled (Settings → Permalinks). Every tracked event then passes through your server as a lightweight relay to PostHog — fine for most sites, but consider a CDN-level proxy for very high-traffic sites.
+
+= Is my personal API key safe? =
+
+It is stored in your WordPress database like other plugin credentials and only ever used server-side (never printed on the front end). Create it with the read-only Query scope so it can't modify anything.
+
 == Changelog ==
+
+= 0.2.0 =
+* Reverse proxy for ad-blocker-resistant tracking through your own domain.
+* In-dashboard analytics page, dashboard widget, and optional embedded shared dashboard.
 
 = 0.1.0 =
 * Initial release.

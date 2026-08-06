@@ -14,6 +14,8 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
   - *Built-in banner* — a lightweight accept/decline cookie banner; PostHog starts opted-out and only captures after acceptance.
   - *External* — integrate any consent plugin: tracking starts when a configurable cookie matches, or when your plugin calls `window.pressedHog.grantConsent()` / `window.pressedHog.denyConsent()`.
 - **WooCommerce events** — `product_added_to_cart`, `checkout_started`, and `order_completed` (with totals and line items, deduplicated per order via order meta).
+- **Reverse proxy** — optionally serve PostHog through your own domain (`yoursite.com/phog/…` by default, prefix configurable). A rewrite rule relays requests server-side to your PostHog host (static assets to the asset domain, everything else to the ingestion domain), forwarding the visitor's IP via `X-Forwarded-For`. Ad-blockers that block PostHog's domains can't block first-party requests. Requires pretty permalinks.
+- **In-dashboard analytics** — a "PostHog" admin page showing pageviews, unique visitors, views-per-visitor (with deltas vs the previous period), a traffic chart, top pages, referrers, and device breakdown for the last 7/30/90 days, queried server-side from PostHog's Query API (HogQL) with 5-minute caching. Includes a WordPress dashboard widget with the 7-day summary, and can embed a PostHog shared dashboard via iframe. Needs a personal API key (read-only Query scope) and project ID.
 - **Feature flags, server-side** — gate content with a shortcode or PHP helpers, evaluated against PostHog's `/decide` endpoint with a 60-second cache:
 
   ```
@@ -48,6 +50,8 @@ includes/class-pressed-hog-wizard.php          Setup wizard (validation, save, t
 includes/class-pressed-hog-tracker.php         Snippet output, identify, consent gating
 includes/class-pressed-hog-flags.php           Server-side flags, shortcode, helpers
 includes/class-pressed-hog-woocommerce.php     WooCommerce event payloads
+includes/class-pressed-hog-proxy.php           Reverse proxy (rewrite rule + relay)
+includes/class-pressed-hog-analytics.php       Analytics page, widget, Query API client
 assets/js/consent.js                           Banner + consent API
 assets/js/woocommerce.js                       Client-side WooCommerce captures
 uninstall.php                                  Removes options and cached flags
