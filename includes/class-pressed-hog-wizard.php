@@ -357,6 +357,10 @@ class Pressed_Hog_Wizard {
 
 	/**
 	 * Send a server-side test event using the saved settings.
+	 *
+	 * PostHog's ingestion endpoint returns 200 even for an invalid key
+	 * (bad events are dropped asynchronously), so the key is authenticated
+	 * against /decide first — otherwise this would always report success.
 	 */
 	public static function ajax_test_event() {
 		self::check_ajax_request();
@@ -364,6 +368,23 @@ class Pressed_Hog_Wizard {
 		$options = pressed_hog_get_options();
 		if ( empty( $options['api_key'] ) ) {
 			wp_send_json_error( array( 'code' => 'missing_key' ) );
+		}
+
+		$auth = wp_remote_post(
+			$options['api_host'] . '/decide/?v=3',
+			array(
+				'timeout' => 8,
+				'headers' => array( 'Content-Type' => 'application/json' ),
+				'body'    => wp_json_encode(
+					array(
+						'api_key'     => $options['api_key'],
+						'distinct_id' => 'pressed-hog-setup-wizard',
+					)
+				),
+			)
+		);
+		if ( is_wp_error( $auth ) || 200 !== wp_remote_retrieve_response_code( $auth ) ) {
+			wp_send_json_error( array( 'code' => 'rejected' ) );
 		}
 
 		$response = wp_remote_post(
