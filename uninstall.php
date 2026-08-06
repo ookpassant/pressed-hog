@@ -11,6 +11,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 delete_option( 'pressed_hog_options' );
 delete_option( 'pressed_hog_flush_rewrite' );
+delete_option( 'pressed_hog_autoload_fixed' );
 
 global $wpdb;
 $wpdb->query(

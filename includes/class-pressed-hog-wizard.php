@@ -87,13 +87,30 @@ class Pressed_Hog_Wizard {
 		wp_enqueue_script( 'pressed-hog-wizard', PRESSED_HOG_URL . 'assets/js/wizard.js', array(), PRESSED_HOG_VERSION, true );
 
 		$options = pressed_hog_get_options();
+		// Expose only the fields the wizard JS reads — never the personal API
+		// key or other secrets, which would otherwise be printed into page HTML.
+		$wizard_options = array(
+			'api_host'          => $options['api_host'],
+			'api_key'           => $options['api_key'],
+			'capture_pageviews' => $options['capture_pageviews'],
+			'autocapture'       => $options['autocapture'],
+			'session_recording' => $options['session_recording'],
+			'enable_surveys'    => $options['enable_surveys'],
+			'identify_users'    => $options['identify_users'],
+			'consent_mode'      => $options['consent_mode'],
+			'consent_cookie_name'  => $options['consent_cookie_name'],
+			'consent_cookie_value' => $options['consent_cookie_value'],
+			'banner_text'       => $options['banner_text'],
+			'banner_accept'     => $options['banner_accept'],
+			'banner_decline'    => $options['banner_decline'],
+		);
 		wp_localize_script(
 			'pressed-hog-wizard',
 			'pressedHogWizard',
 			array(
 				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
 				'nonce'       => wp_create_nonce( self::NONCE_ACTION ),
-				'options'     => $options,
+				'options'     => $wizard_options,
 				'settingsUrl' => admin_url( 'options-general.php?page=pressed-hog' ),
 				'siteUrl'     => home_url( '/' ),
 				'i18n'        => array(
@@ -271,19 +288,44 @@ class Pressed_Hog_Wizard {
 	}
 
 	/**
+	 * Validate and normalize an admin-supplied PostHog host before the plugin
+	 * makes a server-side request to it. Requires an HTTPS URL with a host
+	 * component. HTTPS-only is deliberate: it blocks the classic SSRF target,
+	 * the http-only cloud metadata endpoint (169.254.169.254), which
+	 * wp_http_validate_url does not reject on its own; wp_safe_remote_post
+	 * then covers loopback and private ranges. Returns '' when unusable.
+	 *
+	 * @param string $raw Raw host input.
+	 * @return string
+	 */
+	private static function sanitize_remote_host( $raw ) {
+		$host = esc_url_raw( trim( (string) $raw ), array( 'https' ) );
+		if ( '' === $host || 'https' !== wp_parse_url( $host, PHP_URL_SCHEME ) || ! wp_parse_url( $host, PHP_URL_HOST ) ) {
+			return '';
+		}
+		return untrailingslashit( $host );
+	}
+
+	/**
 	 * Validate an API key against a host by calling /decide server-side.
 	 */
 	public static function ajax_validate_key() {
 		self::check_ajax_request();
 
-		$host = untrailingslashit( esc_url_raw( trim( wp_unslash( $_POST['host'] ?? '' ) ) ) );
+		$host = self::sanitize_remote_host( wp_unslash( $_POST['host'] ?? '' ) );
 		$key  = sanitize_text_field( wp_unslash( $_POST['api_key'] ?? '' ) );
 
-		if ( '' === $host || '' === $key ) {
+		if ( '' === $key ) {
 			wp_send_json_error( array( 'code' => 'missing' ) );
 		}
+		if ( '' === $host ) {
+			wp_send_json_error( array( 'code' => 'invalid_host' ) );
+		}
 
-		$response = wp_remote_post(
+		// wp_safe_remote_post runs the host through wp_http_validate_url,
+		// which rejects loopback, private, and link-local targets — so this
+		// admin-triggered request can't be used to probe the internal network.
+		$response = wp_safe_remote_post(
 			$host . '/decide/?v=3',
 			array(
 				'timeout' => 8,

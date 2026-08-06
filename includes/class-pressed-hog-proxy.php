@@ -76,6 +76,18 @@ class Pressed_Hog_Proxy {
 	}
 
 	/**
+	 * First path segments the proxy is allowed to relay. Matched against the
+	 * segment before the first slash, so it's insensitive to trailing slashes
+	 * and sub-paths. Anything else 404s before an outbound call is made, so
+	 * the endpoint can't be pointed at arbitrary PostHog paths (e.g. /api/) or
+	 * used as a generic fetch sink.
+	 */
+	const ALLOWED_SEGMENTS = array( 'static', 'e', 'i', 'decide', 'capture', 'batch', 'array', 's', 'flags' );
+
+	/** Maximum forwarded request body, in bytes (PostHog events are small). */
+	const MAX_BODY_BYTES = 1048576; // 1 MB
+
+	/**
 	 * Forward the current request to PostHog and stream the response back.
 	 *
 	 * The target host is always the configured PostHog host (or its asset
@@ -87,7 +99,13 @@ class Pressed_Hog_Proxy {
 		$options = pressed_hog_get_options();
 		$path    = ltrim( $path, '/' );
 
-		$target_host = 0 === strpos( $path, 'static/' )
+		$segment = explode( '/', $path, 2 )[0];
+		if ( ! in_array( $segment, self::ALLOWED_SEGMENTS, true ) ) {
+			status_header( 404 );
+			exit;
+		}
+
+		$target_host = 'static' === $segment
 			? str_replace( '.i.posthog.com', '-assets.i.posthog.com', $options['api_host'] )
 			: $options['api_host'];
 
@@ -110,14 +128,29 @@ class Pressed_Hog_Proxy {
 		}
 
 		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
-		$args   = array(
+		if ( ! in_array( $method, array( 'GET', 'POST', 'HEAD', 'OPTIONS' ), true ) ) {
+			status_header( 405 );
+			exit;
+		}
+		$args = array(
 			'method'      => $method,
-			'timeout'     => 10,
+			'timeout'     => 5,
 			'redirection' => 0,
 			'headers'     => $headers,
 		);
-		if ( in_array( $method, array( 'POST', 'PUT', 'PATCH' ), true ) ) {
-			$args['body'] = file_get_contents( 'php://input' );
+		if ( 'POST' === $method ) {
+			// Reject oversized bodies before reading them into memory.
+			$length = isset( $_SERVER['CONTENT_LENGTH'] ) ? (int) $_SERVER['CONTENT_LENGTH'] : 0;
+			if ( $length > self::MAX_BODY_BYTES ) {
+				status_header( 413 );
+				exit;
+			}
+			$body = file_get_contents( 'php://input', false, null, 0, self::MAX_BODY_BYTES + 1 );
+			if ( strlen( (string) $body ) > self::MAX_BODY_BYTES ) {
+				status_header( 413 );
+				exit;
+			}
+			$args['body'] = $body;
 		}
 
 		$response = wp_remote_request( $url, $args );

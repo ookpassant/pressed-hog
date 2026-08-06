@@ -3,7 +3,7 @@
  * Plugin Name:       Pressed Hog – PostHog Analytics
  * Plugin URI:        https://github.com/ookpassant/pressed-hog
  * Description:       Connect WordPress to PostHog: analytics snippet, user identification, WooCommerce events, feature flags, and cookie consent.
- * Version:           0.2.0
+ * Version:           0.2.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            sea
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PRESSED_HOG_VERSION', '0.2.0' );
+define( 'PRESSED_HOG_VERSION', '0.2.1' );
 define( 'PRESSED_HOG_FILE', __FILE__ );
 define( 'PRESSED_HOG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRESSED_HOG_URL', plugin_dir_url( __FILE__ ) );
@@ -88,7 +88,9 @@ function pressed_hog_get_options() {
 register_activation_hook(
 	__FILE__,
 	function () {
-		add_option( PRESSED_HOG_OPTION, pressed_hog_default_options() );
+		// autoload disabled: the option holds the personal API key, so it must
+		// not sit in the alloptions cache loaded on every public request.
+		add_option( PRESSED_HOG_OPTION, pressed_hog_default_options(), '', false );
 		set_transient( Pressed_Hog_Wizard::REDIRECT_TRANSIENT, 1, 60 );
 		update_option( Pressed_Hog_Proxy::FLUSH_FLAG, 1 );
 	}
@@ -96,10 +98,34 @@ register_activation_hook(
 
 register_deactivation_hook( __FILE__, 'flush_rewrite_rules' );
 
+/**
+ * One-time upgrade: ensure the option (which holds the personal API key) is
+ * not autoloaded on installs created before autoload was disabled.
+ */
+function pressed_hog_maybe_migrate_autoload() {
+	if ( get_option( 'pressed_hog_autoload_fixed' ) ) {
+		return;
+	}
+	$value = get_option( PRESSED_HOG_OPTION );
+	if ( false !== $value ) {
+		if ( function_exists( 'wp_set_option_autoload' ) ) {
+			wp_set_option_autoload( PRESSED_HOG_OPTION, false );
+		} else {
+			delete_option( PRESSED_HOG_OPTION );
+			add_option( PRESSED_HOG_OPTION, $value, '', false );
+		}
+	}
+	add_option( 'pressed_hog_autoload_fixed', 1, '', false );
+}
+
 add_action(
 	'plugins_loaded',
 	function () {
 		load_plugin_textdomain( 'pressed-hog', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+
+		if ( is_admin() ) {
+			pressed_hog_maybe_migrate_autoload();
+		}
 
 		Pressed_Hog_Settings::init();
 		Pressed_Hog_Wizard::init();

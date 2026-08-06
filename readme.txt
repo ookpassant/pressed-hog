@@ -4,7 +4,7 @@ Tags: posthog, analytics, feature flags, woocommerce, cookie consent
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,9 @@ It needs pretty permalinks enabled (Settings → Permalinks). Every tracked even
 It is stored in your WordPress database like other plugin credentials and only ever used server-side (never printed on the front end). Create it with the read-only Query scope so it can't modify anything.
 
 == Changelog ==
+
+= 0.2.1 =
+* Security hardening: restrict the reverse proxy to known PostHog paths and methods with a request-body size cap; validate the wizard's key-check host (HTTPS only, via wp_safe_remote_post) to prevent internal-network probing; stop exposing the personal API key in the setup wizard's page HTML and keep it out of the autoloaded options cache; reject numeric anonymous feature-flag identifiers.
 
 = 0.2.0 =
 * Reverse proxy for ad-blocker-resistant tracking through your own domain.

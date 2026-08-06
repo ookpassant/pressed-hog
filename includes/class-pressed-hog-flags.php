@@ -41,6 +41,13 @@ class Pressed_Hog_Flags {
 		$raw  = sanitize_text_field( wp_unslash( $_COOKIE[ $cookie_name ] ) );
 		$data = json_decode( rawurldecode( $raw ), true );
 		if ( is_array( $data ) && ! empty( $data['distinct_id'] ) && is_string( $data['distinct_id'] ) ) {
+			// Logged-in visitors are identified by their bare WP user ID, so an
+			// anonymous visitor must not present a purely-numeric distinct_id —
+			// that would let them evaluate flags as if they were that user.
+			// Genuine posthog-js anonymous IDs are UUIDs, never plain integers.
+			if ( ctype_digit( $data['distinct_id'] ) ) {
+				return null;
+			}
 			return $data['distinct_id'];
 		}
 		return null;
