@@ -25,12 +25,17 @@ class Pressed_Hog_Settings {
 	}
 
 	public static function action_links( $links ) {
+		$wizard_link   = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( Pressed_Hog_Wizard::url() ),
+			esc_html__( 'Setup wizard', 'pressed-hog' )
+		);
 		$settings_link = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ),
 			esc_html__( 'Settings', 'pressed-hog' )
 		);
-		array_unshift( $links, $settings_link );
+		array_unshift( $links, $settings_link, $wizard_link );
 		return $links;
 	}
 
@@ -40,14 +45,15 @@ class Pressed_Hog_Settings {
 		}
 		$options = pressed_hog_get_options();
 		$screen  = get_current_screen();
-		if ( ! empty( $options['api_key'] ) || ( $screen && 'settings_page_pressed-hog' === $screen->id ) ) {
+		$on_own_screens = $screen && in_array( $screen->id, array( 'settings_page_pressed-hog', 'settings_page_' . Pressed_Hog_Wizard::PAGE_SLUG ), true );
+		if ( ! empty( $options['api_key'] ) || $on_own_screens ) {
 			return;
 		}
 		printf(
 			'<div class="notice notice-info is-dismissible"><p>%s <a href="%s">%s</a></p></div>',
-			esc_html__( 'Pressed Hog is active but not tracking yet — add your PostHog project API key to get started.', 'pressed-hog' ),
-			esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ),
-			esc_html__( 'Open settings', 'pressed-hog' )
+			esc_html__( 'Pressed Hog is active but not tracking yet — connect your PostHog project to get started.', 'pressed-hog' ),
+			esc_url( Pressed_Hog_Wizard::url() ),
+			esc_html__( 'Run the setup wizard', 'pressed-hog' )
 		);
 	}
 

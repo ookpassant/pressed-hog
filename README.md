@@ -4,7 +4,8 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
 
 ## Features
 
-- **One-click install** — enter your project API key and host on the settings page (Settings → Pressed Hog); the plugin injects the official posthog-js snippet on every page.
+- **Setup wizard** — activation redirects to a 4-step wizard: pick your region (US/EU/self-hosted), paste your API key (validated live against your PostHog host from the server), choose tracking and consent options, then send a test event to confirm end-to-end delivery. Re-run it any time from the Plugins screen.
+- **Settings page** — everything the wizard configures (plus role exclusions) is also editable at Settings → Pressed Hog; the plugin injects the official posthog-js snippet on every page.
 - **Tracking toggles** — pageview capture, autocapture, session replay, and popover surveys are each switchable.
 - **Identify logged-in users** — optionally call `posthog.identify()` with the WordPress user ID, email, and display name, so PostHog persons map to real accounts.
 - **Role exclusions** — logged-in users with excluded roles (administrators and editors by default) never get the snippet.
@@ -29,7 +30,7 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
 
 1. Download this repository as a zip (or clone it into `wp-content/plugins/pressed-hog`).
 2. Activate **Pressed Hog – PostHog Analytics** in wp-admin.
-3. Go to **Settings → Pressed Hog** and enter your PostHog project API key (`phc_…`) and host.
+3. The setup wizard opens automatically — connect your PostHog project and you're done.
 
 ## Developer hooks
 
@@ -43,6 +44,7 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
 ```
 pressed-hog.php                                Bootstrap, defaults, option access
 includes/class-pressed-hog-settings.php        Settings page (Settings API)
+includes/class-pressed-hog-wizard.php          Setup wizard (validation, save, test event)
 includes/class-pressed-hog-tracker.php         Snippet output, identify, consent gating
 includes/class-pressed-hog-flags.php           Server-side flags, shortcode, helpers
 includes/class-pressed-hog-woocommerce.php     WooCommerce event payloads

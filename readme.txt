@@ -16,6 +16,7 @@ Pressed Hog installs [PostHog](https://posthog.com) product analytics on your Wo
 
 **Features**
 
+* Guided setup wizard on activation: pick your region, validate your API key live against your PostHog host, choose tracking and consent options, and send a test event to confirm everything works end to end.
 * Injects the official posthog-js snippet with your project API key and host.
 * Toggles for pageview capture, autocapture, session replay, and popover surveys.
 * Optionally identify logged-in users, linking events to their WordPress account.
@@ -40,8 +41,10 @@ PostHog is a registered trademark of PostHog, Inc. This plugin is an independent
 == Installation ==
 
 1. Upload the plugin to `/wp-content/plugins/pressed-hog`, or install it via the Plugins screen.
-2. Activate it.
-3. Go to Settings → Pressed Hog, enter your PostHog project API key (starts with `phc_`), and choose your PostHog host.
+2. Activate it — you'll be taken straight to the setup wizard.
+3. Follow the wizard: pick your PostHog region, paste your project API key (starts with `phc_`), choose tracking and consent options, and send a test event.
+
+You can re-run the wizard any time from the "Setup wizard" link on the Plugins screen, or manage everything on Settings → Pressed Hog.
 
 == Frequently Asked Questions ==
 

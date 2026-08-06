@@ -23,6 +23,7 @@ define( 'PRESSED_HOG_URL', plugin_dir_url( __FILE__ ) );
 define( 'PRESSED_HOG_OPTION', 'pressed_hog_options' );
 
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-settings.php';
+require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-wizard.php';
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-tracker.php';
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-flags.php';
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-woocommerce.php';
@@ -69,6 +70,7 @@ register_activation_hook(
 	__FILE__,
 	function () {
 		add_option( PRESSED_HOG_OPTION, pressed_hog_default_options() );
+		set_transient( Pressed_Hog_Wizard::REDIRECT_TRANSIENT, 1, 60 );
 	}
 );
 
@@ -78,6 +80,7 @@ add_action(
 		load_plugin_textdomain( 'pressed-hog', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
 		Pressed_Hog_Settings::init();
+		Pressed_Hog_Wizard::init();
 		Pressed_Hog_Tracker::init();
 		Pressed_Hog_Flags::init();
 		Pressed_Hog_WooCommerce::init();
