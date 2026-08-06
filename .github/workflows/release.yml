@@ -1,0 +1,64 @@
+name: Build & release plugin zip
+
+# Builds an install-ready WordPress plugin zip and attaches it to a GitHub
+# Release whenever a v* tag is pushed. The zip unpacks to a single
+# `pressed-hog/` folder (forward-slash paths, LF line endings) so it can be
+# uploaded straight through Plugins -> Add New -> Upload Plugin.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+
+      - name: Lint PHP
+        run: |
+          for f in $(find . -name '*.php' -not -path './.git/*'); do
+            php -l "$f" > /dev/null
+          done
+
+      - name: Build plugin zip
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          SLUG="pressed-hog"
+
+          # Confirm the plugin header version matches the tag, so a mistagged
+          # release fails loudly instead of shipping the wrong version.
+          HEADER_VERSION="$(sed -n 's/^ \* Version:[[:space:]]*//p' "${SLUG}.php" | head -1 | tr -d '[:space:]')"
+          if [ "${HEADER_VERSION}" != "${VERSION}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} (=${VERSION}) does not match plugin header version ${HEADER_VERSION}"
+            exit 1
+          fi
+
+          rm -rf build
+          mkdir build
+          # Export exactly the committed tree into build/pressed-hog/ …
+          git archive --format=tar --prefix="${SLUG}/" HEAD | tar -x -C build
+          # … then drop files that don't belong in a runtime distributable.
+          rm -rf "build/${SLUG}/docs" "build/${SLUG}/.github"
+
+          ( cd build && zip -rq "../${SLUG}-${VERSION}.zip" "${SLUG}" )
+          echo "ASSET=${SLUG}-${VERSION}.zip" >> "$GITHUB_ENV"
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" "${ASSET}" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" "${ASSET}" \
+              --title "Pressed Hog ${GITHUB_REF_NAME}" \
+              --generate-notes
+          fi
