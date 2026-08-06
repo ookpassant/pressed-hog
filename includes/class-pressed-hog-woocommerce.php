@@ -66,6 +66,14 @@ class Pressed_Hog_WooCommerce {
 			return null;
 		}
 
+		// Require the order key from the URL, exactly like WooCommerce's own
+		// thank-you template — otherwise anyone could enumerate order IDs and
+		// read totals/items from the localized script data.
+		$order_key = isset( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- WooCommerce order-received URL parameter.
+		if ( ! $order_key || ! hash_equals( $order->get_order_key(), $order_key ) ) {
+			return null;
+		}
+
 		$items = array();
 		foreach ( $order->get_items() as $item ) {
 			$items[] = array(

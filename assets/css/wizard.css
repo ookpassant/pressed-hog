@@ -60,6 +60,10 @@
 
 /* Fields */
 
+.pressed-hog-wizard [hidden] {
+	display: none !important;
+}
+
 .pressed-hog-field {
 	display: block;
 	margin: 16px 0;
