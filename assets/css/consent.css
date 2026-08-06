@@ -1,0 +1,55 @@
+.pressed-hog-banner {
+	position: fixed;
+	inset-inline: 16px;
+	bottom: 16px;
+	z-index: 99999;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	max-width: 640px;
+	margin-inline: auto;
+	padding: 16px 20px;
+	background: #1d1f27;
+	color: #fff;
+	border-radius: 10px;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.pressed-hog-banner__text {
+	margin: 0;
+	flex: 1 1 260px;
+}
+
+.pressed-hog-banner__actions {
+	display: flex;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+
+.pressed-hog-banner__button {
+	padding: 8px 16px;
+	border: 0;
+	border-radius: 6px;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.pressed-hog-banner__button--accept {
+	background: #f7a501;
+	color: #1d1f27;
+	font-weight: 600;
+}
+
+.pressed-hog-banner__button--decline {
+	background: transparent;
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.pressed-hog-banner__button:hover {
+	filter: brightness(1.1);
+}

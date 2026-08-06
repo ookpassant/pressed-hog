@@ -1,0 +1,193 @@
+/* Pressed Hog analytics page (wp-admin, light surface). */
+
+.pressed-hog-analytics .ph-range {
+	margin: 12px 0 4px;
+}
+
+/* Stat tiles */
+
+.ph-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 16px;
+	margin: 16px 0;
+	max-width: 720px;
+}
+
+.ph-tile {
+	background: #fff;
+	border: 1px solid rgba(11, 11, 11, 0.1);
+	border-radius: 8px;
+	padding: 16px 20px;
+}
+
+.ph-tile__label {
+	display: block;
+	color: #52514e;
+	margin-bottom: 4px;
+}
+
+.ph-tile__value {
+	display: block;
+	font-size: 28px;
+	font-weight: 600;
+	line-height: 1.2;
+	color: #0b0b0b;
+	margin-bottom: 4px;
+}
+
+.ph-delta--up {
+	color: #006300;
+}
+
+.ph-delta--down {
+	color: #d03b3b;
+}
+
+.ph-delta--none {
+	color: #898781;
+}
+
+/* Cards */
+
+.ph-card {
+	background: #fff;
+	border: 1px solid rgba(11, 11, 11, 0.1);
+	border-radius: 8px;
+	padding: 16px 20px 20px;
+	margin: 16px 0;
+	max-width: 1100px;
+}
+
+.ph-card__title {
+	margin: 0 0 8px;
+	font-size: 14px;
+}
+
+.ph-card--setup {
+	max-width: 640px;
+	padding: 24px 28px;
+}
+
+/* Legend */
+
+.ph-legend {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 8px;
+	color: #52514e;
+	font-size: 12px;
+}
+
+.ph-legend__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.ph-chip {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+	flex: 0 0 auto;
+}
+
+.ph-chip--pageviews {
+	background: #2a78d6;
+}
+
+.ph-chip--visitors {
+	background: #eb6834;
+}
+
+/* Chart */
+
+#pressed-hog-chart {
+	position: relative;
+}
+
+.ph-chart-empty {
+	color: #898781;
+	padding: 24px 0;
+}
+
+.ph-tooltip {
+	position: absolute;
+	background: #fff;
+	border: 1px solid rgba(11, 11, 11, 0.1);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+	padding: 8px 12px;
+	pointer-events: none;
+	font-size: 12px;
+	color: #0b0b0b;
+	min-width: 90px;
+	z-index: 10;
+}
+
+.ph-tooltip__title {
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.ph-tooltip__row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-variant-numeric: tabular-nums;
+}
+
+.ph-table-view {
+	margin-top: 12px;
+}
+
+.ph-table-view summary {
+	cursor: pointer;
+	color: #52514e;
+}
+
+.ph-table-view table {
+	margin-top: 8px;
+	max-width: 480px;
+}
+
+/* Breakdown tables */
+
+.ph-columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 16px;
+	max-width: 1100px;
+}
+
+.ph-columns .ph-card {
+	margin: 0;
+}
+
+.ph-num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+th.ph-num {
+	text-align: right;
+}
+
+.ph-label-cell {
+	word-break: break-all;
+}
+
+.ph-empty {
+	color: #898781;
+}
+
+/* Embedded dashboard */
+
+.ph-embed {
+	width: 100%;
+	height: 800px;
+	border: 0;
+	border-radius: 4px;
+}
