@@ -3,7 +3,7 @@
  * Plugin Name:       Pressed Hog – PostHog Analytics
  * Plugin URI:        https://github.com/ookpassant/pressed-hog
  * Description:       Connect WordPress to PostHog: analytics snippet, user identification, WooCommerce events, feature flags, and cookie consent.
- * Version:           0.2.1
+ * Version:           0.3.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            sea
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PRESSED_HOG_VERSION', '0.2.1' );
+define( 'PRESSED_HOG_VERSION', '0.3.0' );
 define( 'PRESSED_HOG_FILE', __FILE__ );
 define( 'PRESSED_HOG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRESSED_HOG_URL', plugin_dir_url( __FILE__ ) );
@@ -29,6 +29,7 @@ require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-flags.php';
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-woocommerce.php';
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-proxy.php';
 require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-analytics.php';
+require_once PRESSED_HOG_DIR . 'includes/class-pressed-hog-links.php';
 
 /**
  * Default options. Everything the plugin stores lives in one option array.
@@ -134,5 +135,6 @@ add_action(
 		Pressed_Hog_WooCommerce::init();
 		Pressed_Hog_Proxy::init();
 		Pressed_Hog_Analytics::init();
+		Pressed_Hog_Links::init();
 	}
 );

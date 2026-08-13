@@ -19,6 +19,7 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
 - **WooCommerce events** — `product_added_to_cart` (classic and block themes), `checkout_started`, and `order_completed` (with totals and line items, deduplicated per order and gated on the order key).
 - **Reverse proxy** — optionally serve PostHog through your own domain (`yoursite.com/phog/…`, prefix configurable). A rewrite rule relays requests server-side to your PostHog host, forwarding the visitor's IP via `X-Forwarded-For`. Ad-blockers that block PostHog's domains can't block first-party requests. Requires pretty permalinks.
 - **In-dashboard analytics** — a "PostHog" admin page with pageviews, unique visitors, deltas vs the previous period, a traffic chart, top pages, referrers, and devices over 7/30/90 days, queried server-side from PostHog's Query API with 5-minute caching. Includes a WP dashboard widget and an optional embedded PostHog shared dashboard.
+- **QR codes & trackable links** — a "QR Codes" page (under the PostHog menu) where you paste any URL of your own and get a campaign-tagged link back: UTM parameters (`utm_source` / `utm_medium` / `utm_campaign`) plus a unique `phg_qr` id, so each QR is individually attributable on the `$pageview` event in PostHog. QR codes are generated entirely in the browser — the URL is never sent to a third-party QR service — and downloadable as PNG or SVG. Saved links are listed on the page and exportable as a CSV spreadsheet.
 - **Feature flags, server-side** — gate content with a shortcode or PHP helpers, evaluated against PostHog's `/decide` endpoint with a 60-second cache:
 
   ```
@@ -98,8 +99,10 @@ includes/class-pressed-hog-flags.php           Server-side flags, shortcode, hel
 includes/class-pressed-hog-woocommerce.php     WooCommerce event payloads
 includes/class-pressed-hog-proxy.php           Reverse proxy (rewrite rule + relay)
 includes/class-pressed-hog-analytics.php       Analytics page, widget, Query API client
+includes/class-pressed-hog-links.php           QR codes & trackable links (store, CSV export)
 assets/js/consent.js                           Banner + consent API
 assets/js/woocommerce.js                       Client-side WooCommerce captures
+assets/js/links.js                             In-browser QR encoder + links UI
 assets/js/wizard.js, assets/js/analytics.js    Admin UIs
 uninstall.php                                  Removes options and cached data
 readme.txt                                     WordPress.org plugin readme

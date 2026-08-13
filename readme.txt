@@ -4,7 +4,7 @@ Tags: posthog, analytics, feature flags, woocommerce, cookie consent
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.2.1
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,7 @@ Pressed Hog installs [PostHog](https://posthog.com) product analytics on your Wo
 * Server-side feature flags: a `[posthog_flag key="my-flag"]…[/posthog_flag]` shortcode to gate content, plus `pressed_hog_is_feature_enabled()` and `pressed_hog_get_feature_flag()` template helpers.
 * Reverse proxy: serve PostHog through your own domain (e.g. `yoursite.com/phog/…`) so ad-blockers that filter PostHog's domains can't block tracking.
 * In-dashboard analytics: a PostHog admin page with pageviews, unique visitors, a traffic chart, top pages, referrers, and devices — plus a WordPress dashboard widget and an optional embedded PostHog shared dashboard. Requires a personal API key with read-only Query scope.
+* QR codes & trackable links: turn any URL of your own into a campaign-tagged link (UTM parameters plus a unique per-link id so PostHog can attribute each QR individually), generate its QR code right in the browser (nothing is sent to a third-party QR service), keep a saved list of your links, and export the whole list as a downloadable CSV spreadsheet. Download each QR as PNG or SVG.
 
 **Consent integration for developers**
 
@@ -66,11 +67,22 @@ Only what you enable. The tracking snippet runs in visitors' browsers; the only 
 
 It needs pretty permalinks enabled (Settings → Permalinks). Every tracked event then passes through your server as a lightweight relay to PostHog — fine for most sites, but consider a CDN-level proxy for very high-traffic sites.
 
+= How do the QR codes track scans? =
+
+Each trackable link appends standard UTM parameters (source, medium, campaign) plus a unique `phg_qr` id to your destination URL. When someone scans the code and lands on your site, posthog-js captures those parameters on the `$pageview` event, so you can break scans down by campaign — or by individual QR code — in PostHog. The QR image itself is generated in the visitor's/your browser; the URL is never sent to an external QR service.
+
+= Where are my links stored, and can I export them? =
+
+They're saved in your WordPress database (the `pressed_hog_links` option) and listed on the QR Codes page. Use "Download sheet (CSV)" to export every link — label, destination, full tracked URL, UTM values, tracking id, and created date — as a spreadsheet you can open in Excel or Google Sheets.
+
 = Is my personal API key safe? =
 
 It is stored in your WordPress database like other plugin credentials and only ever used server-side (never printed on the front end). Create it with the read-only Query scope so it can't modify anything.
 
 == Changelog ==
+
+= 0.3.0 =
+* New "QR Codes" page (under the PostHog menu): create trackable links from your own URLs with UTM tags and a unique tracking id, generate QR codes, save your links, and download the list as a CSV spreadsheet. QR codes are generated entirely in the browser and can be downloaded as PNG or SVG.
 
 = 0.2.1 =
 * Security hardening: restrict the reverse proxy to known PostHog paths and methods with a request-body size cap; validate the wizard's key-check host (HTTPS only, via wp_safe_remote_post) to prevent internal-network probing; stop exposing the personal API key in the setup wizard's page HTML and keep it out of the autoloaded options cache; reject numeric anonymous feature-flag identifiers.
