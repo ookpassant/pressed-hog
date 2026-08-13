@@ -1,0 +1,253 @@
+/* Pressed Hog — QR codes & trackable links page (wp-admin, light surface). */
+
+.pressed-hog-links .ph-links-intro {
+	max-width: 780px;
+	color: #52514e;
+}
+
+/* Cards (shared look with the analytics page, redefined so this page is
+   self-contained and doesn't depend on analytics.css being loaded). */
+
+.pressed-hog-links .ph-card {
+	background: #fff;
+	border: 1px solid rgba(11, 11, 11, 0.1);
+	border-radius: 8px;
+	padding: 16px 20px 20px;
+	margin: 16px 0;
+	max-width: 1100px;
+}
+
+.pressed-hog-links .ph-card__title {
+	margin: 0 0 12px;
+	font-size: 14px;
+}
+
+.pressed-hog-links .ph-empty {
+	color: #898781;
+}
+
+/* Create form + preview */
+
+.ph-links-create__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 260px;
+	gap: 28px;
+	align-items: start;
+}
+
+@media (max-width: 782px) {
+	.ph-links-create__grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ph-links-field {
+	display: flex;
+	flex-direction: column;
+	margin: 0 0 14px;
+}
+
+.ph-links-field label {
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.ph-links-field input {
+	max-width: 100%;
+}
+
+.ph-links-field .description {
+	margin-top: 4px;
+}
+
+.ph-links-form__row {
+	display: flex;
+	gap: 16px;
+}
+
+.ph-links-form__row .ph-links-field {
+	flex: 1;
+}
+
+.ph-links-preview {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	background: #f6f7f7;
+	border: 1px solid rgba(11, 11, 11, 0.08);
+	border-radius: 8px;
+	padding: 16px;
+}
+
+.ph-links-preview__label {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #757470;
+	margin-bottom: 10px;
+}
+
+.ph-links-preview__url {
+	display: block;
+	margin-top: 10px;
+	font-size: 11px;
+	word-break: break-all;
+	color: #52514e;
+	background: none;
+}
+
+/* The QR render box (shared by preview and modal). */
+
+.ph-qr {
+	width: 200px;
+	max-width: 100%;
+	aspect-ratio: 1 / 1;
+	background: #fff;
+	border: 1px solid rgba(11, 11, 11, 0.08);
+	border-radius: 4px;
+}
+
+.ph-qr svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.ph-qr.ph-qr--empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 12px;
+	font-size: 12px;
+	color: #898781;
+	aspect-ratio: auto;
+	min-height: 120px;
+}
+
+/* Links table */
+
+.ph-links-table-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.ph-links-table-head .ph-card__title {
+	margin: 0;
+}
+
+.ph-links-table td {
+	vertical-align: middle;
+}
+
+.ph-links-table__label strong {
+	display: block;
+}
+
+.ph-links-table__campaign {
+	display: inline-block;
+	margin-top: 2px;
+	font-size: 11px;
+	color: #757470;
+	background: #f0f0f1;
+	border-radius: 3px;
+	padding: 1px 6px;
+}
+
+.ph-links-table__actions {
+	white-space: nowrap;
+	text-align: right;
+}
+
+.ph-links-table__delete {
+	color: #b32d2e;
+	margin-left: 8px;
+}
+
+.ph-copy {
+	margin-left: 6px;
+	font-size: 12px;
+}
+
+/* QR modal */
+
+body.ph-modal-open {
+	overflow: hidden;
+}
+
+.ph-qr-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+
+.ph-qr-modal[hidden] {
+	display: none;
+}
+
+.ph-qr-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.ph-qr-modal__dialog {
+	position: relative;
+	background: #fff;
+	border-radius: 8px;
+	padding: 24px 28px 28px;
+	max-width: 360px;
+	width: 100%;
+	text-align: center;
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+}
+
+.ph-qr-modal__title {
+	margin: 0 0 16px;
+	font-size: 16px;
+	word-break: break-word;
+}
+
+.ph-qr-modal .ph-qr {
+	width: 260px;
+	margin: 0 auto;
+}
+
+.ph-qr-modal__url {
+	display: block;
+	margin: 14px 0 4px;
+	font-size: 11px;
+	word-break: break-all;
+	color: #52514e;
+	background: none;
+}
+
+.ph-qr-modal__actions {
+	margin: 18px 0 0;
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+}
+
+.ph-qr-modal__close {
+	position: absolute;
+	top: 8px;
+	right: 12px;
+	border: 0;
+	background: none;
+	font-size: 24px;
+	line-height: 1;
+	color: #757470;
+	cursor: pointer;
+}
+
+.ph-qr-modal__close:hover {
+	color: #1d2327;
+}
