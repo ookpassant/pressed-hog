@@ -10,8 +10,10 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 delete_option( 'pressed_hog_options' );
+delete_option( 'pressed_hog_personal_api_key' );
 delete_option( 'pressed_hog_flush_rewrite' );
 delete_option( 'pressed_hog_autoload_fixed' );
+delete_option( 'pressed_hog_personal_api_key_migrated' );
 delete_option( 'pressed_hog_links' );
 
 global $wpdb;
