@@ -25,7 +25,7 @@ class Pressed_Hog_Analytics {
 
 	public static function is_configured() {
 		$options = pressed_hog_get_options();
-		return ! empty( $options['personal_api_key'] ) && ! empty( $options['project_id'] );
+		return '' !== pressed_hog_get_personal_api_key() && ! empty( $options['project_id'] );
 	}
 
 	public static function add_menu() {
@@ -59,9 +59,10 @@ class Pressed_Hog_Analytics {
 	 * @return array|WP_Error Result rows (arrays of columns).
 	 */
 	private static function query( $hogql ) {
-		$options   = pressed_hog_get_options();
-		$cache_key = 'pressed_hog_q_' . md5( $options['project_id'] . '|' . $hogql );
-		$cached    = get_transient( $cache_key );
+		$options          = pressed_hog_get_options();
+		$personal_api_key = pressed_hog_get_personal_api_key();
+		$cache_key        = 'pressed_hog_q_' . md5( $options['project_id'] . '|' . $hogql );
+		$cached           = get_transient( $cache_key );
 		if ( is_array( $cached ) ) {
 			return $cached;
 		}
@@ -72,7 +73,7 @@ class Pressed_Hog_Analytics {
 				'timeout' => 15,
 				'headers' => array(
 					'Content-Type'  => 'application/json',
-					'Authorization' => 'Bearer ' . $options['personal_api_key'],
+					'Authorization' => 'Bearer ' . $personal_api_key,
 				),
 				'body'    => wp_json_encode(
 					array(
