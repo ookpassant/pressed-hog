@@ -79,7 +79,7 @@ pressed_hog_get_feature_flag( string $flag_key, ?string $distinct_id = null ): b
 ## Security model
 
 - The **project API key** (`phc_…`) is public by design — it ships in every page's source, like any PostHog install.
-- The **personal API key** (`phx_…`) for the dashboard is stored in `wp_options` (non-autoloaded, so it stays out of the object cache on public requests), used only server-side, and never printed on the front end or in the setup wizard's page HTML. Create it with the read-only *Query* scope.
+- The **personal API key** (`phx_…`) for the dashboard is stored in its own non-autoloaded `wp_options` entry. Public tracking requests load a separate settings option and do not retrieve the credential. It is used only server-side and is never printed on the front end or in the setup wizard's page HTML. Create it with the read-only *Query* scope.
 - All admin AJAX endpoints require the `manage_options` capability and a nonce. The wizard's key-check accepts only HTTPS hosts and uses `wp_safe_remote_post`, so it can't be used to probe the internal network (including cloud metadata endpoints).
 - The reverse proxy only relays to your configured PostHog host, and only for a fixed allow-list of PostHog paths (`e`, `i`, `decide`, `capture`, `batch`, `static`, …) and methods, with a request-body size cap and a short upstream timeout. It cannot be pointed at arbitrary hosts or paths, or used as an open/fetch proxy. For very high-traffic sites, put a CDN-level proxy in front rather than relying on PHP.
 - The `order_completed` payload requires the order key from the URL (like WooCommerce's own thank-you page), so order IDs can't be enumerated for totals.
