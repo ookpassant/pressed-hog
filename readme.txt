@@ -77,7 +77,7 @@ They're saved in your WordPress database (the `pressed_hog_links` option) and li
 
 = Is my personal API key safe? =
 
-It is stored in your WordPress database like other plugin credentials and only ever used server-side (never printed on the front end). Create it with the read-only Query scope so it can't modify anything.
+It is stored in its own non-autoloaded WordPress option. Public tracking requests load a separate settings option and do not retrieve the credential. It is only ever used server-side (never printed on the front end). Create it with the read-only Query scope so it can't modify anything.
 
 == Changelog ==
 
