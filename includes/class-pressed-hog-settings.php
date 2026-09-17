@@ -358,11 +358,10 @@ class Pressed_Hog_Settings {
 	}
 
 	public static function render_personal_key() {
-		$options = pressed_hog_get_options();
 		printf(
 			'<input type="password" class="regular-text code" name="%s[personal_api_key]" value="%s" placeholder="phx_..." autocomplete="new-password" />',
 			esc_attr( PRESSED_HOG_OPTION ),
-			esc_attr( $options['personal_api_key'] )
+			esc_attr( pressed_hog_get_personal_api_key() )
 		);
 		printf(
 			'<p class="description">%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
@@ -453,7 +452,9 @@ class Pressed_Hog_Settings {
 			update_option( Pressed_Hog_Proxy::FLUSH_FLAG, 1 );
 		}
 
-		$clean['personal_api_key'] = sanitize_text_field( $input['personal_api_key'] ?? '' );
+		if ( array_key_exists( 'personal_api_key', $input ) ) {
+			pressed_hog_set_personal_api_key( $input['personal_api_key'] );
+		}
 		$clean['project_id']       = absint( $input['project_id'] ?? 0 );
 
 		$embed              = esc_url_raw( trim( $input['embed_url'] ?? '' ) );
