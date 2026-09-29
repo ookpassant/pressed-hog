@@ -117,7 +117,7 @@ The tracking script and all events now flow via `yoursite.com/phog/…` and your
 
 ## 8. Analytics inside wp-admin
 
-The **PostHog** menu item in wp-admin shows your traffic without leaving WordPress — pageviews, unique visitors, deltas vs the previous period, a traffic chart, top pages, referrers, and devices, over the last 7/30/90 days — plus a summary widget on the WP Dashboard:
+The **Pressed Hog** menu item in wp-admin shows your traffic without leaving WordPress — pageviews, unique visitors, deltas vs the previous period, a traffic chart, top pages, referrers, and devices, over the last 7/30/90 days — plus a summary widget on the WP Dashboard:
 
 ![The PostHog analytics page in wp-admin](images/analytics.png)
 

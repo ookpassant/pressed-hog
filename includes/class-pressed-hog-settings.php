@@ -18,6 +18,7 @@ class Pressed_Hog_Settings {
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'maybe_notice_missing_key' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_filter(
 			'plugin_action_links_' . plugin_basename( PRESSED_HOG_FILE ),
 			array( __CLASS__, 'action_links' )
@@ -39,14 +40,24 @@ class Pressed_Hog_Settings {
 		return $links;
 	}
 
+	public static function enqueue( $hook ) {
+		if ( 'settings_page_pressed-hog' !== $hook ) {
+			return;
+		}
+		wp_enqueue_script( 'pressed-hog-settings', PRESSED_HOG_URL . 'assets/js/settings.js', array(), PRESSED_HOG_VERSION, true );
+	}
+
+	/**
+	 * Setup reminder, shown only on the Plugins screen so it never nags
+	 * across the rest of wp-admin.
+	 */
 	public static function maybe_notice_missing_key() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 		$options = pressed_hog_get_options();
 		$screen  = get_current_screen();
-		$on_own_screens = $screen && in_array( $screen->id, array( 'settings_page_pressed-hog', 'settings_page_' . Pressed_Hog_Wizard::PAGE_SLUG ), true );
-		if ( ! empty( $options['api_key'] ) || $on_own_screens ) {
+		if ( ! empty( $options['api_key'] ) || ! $screen || 'plugins' !== $screen->id ) {
 			return;
 		}
 		printf(
@@ -59,7 +70,7 @@ class Pressed_Hog_Settings {
 
 	public static function add_menu() {
 		add_options_page(
-			__( 'Pressed Hog – PostHog', 'pressed-hog' ),
+			__( 'Pressed Hog – Analytics for PostHog', 'pressed-hog' ),
 			__( 'Pressed Hog', 'pressed-hog' ),
 			'manage_options',
 			'pressed-hog',
@@ -135,7 +146,7 @@ class Pressed_Hog_Settings {
 			function () {
 				printf(
 					'<p>%s</p>',
-					esc_html__( 'Serve PostHog through your own domain so ad-blockers that filter PostHog’s domains can’t block tracking. Requests are relayed server-side by your WordPress site.', 'pressed-hog' )
+					esc_html__( 'Serve PostHog through your own domain, so analytics requests are first-party and delivered more reliably. Requests are relayed server-side by your WordPress site.', 'pressed-hog' )
 				);
 			},
 			'pressed-hog'
@@ -149,7 +160,7 @@ class Pressed_Hog_Settings {
 			function () {
 				printf(
 					'<p>%s</p>',
-					esc_html__( 'The PostHog admin page and dashboard widget read stats via PostHog’s Query API, which needs a personal API key (separate from the project key above) and your numeric project ID.', 'pressed-hog' )
+					esc_html__( 'The Pressed Hog analytics page and dashboard widget read stats via PostHog’s Query API, which needs a personal API key (separate from the project key above) and your numeric project ID.', 'pressed-hog' )
 				);
 			},
 			'pressed-hog'
@@ -169,7 +180,7 @@ class Pressed_Hog_Settings {
 		}
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Pressed Hog – PostHog Analytics', 'pressed-hog' ); ?></h1>
+			<h1><?php esc_html_e( 'Pressed Hog – Analytics for PostHog', 'pressed-hog' ); ?></h1>
 			<form action="options.php" method="post">
 				<?php
 				settings_fields( 'pressed_hog' );
@@ -215,21 +226,6 @@ class Pressed_Hog_Settings {
 			value="<?php echo esc_attr( $options['api_host'] ); ?>"
 			<?php echo $is_custom ? '' : 'readonly'; ?> />
 		<p class="description"><?php esc_html_e( 'Where events are sent. Pick a PostHog Cloud region or enter your self-hosted instance URL.', 'pressed-hog' ); ?></p>
-		<script>
-		(function () {
-			var preset = document.getElementById('pressed-hog-host-preset');
-			var input = document.getElementById('pressed-hog-host-input');
-			preset.addEventListener('change', function () {
-				if (preset.value === 'custom') {
-					input.readOnly = false;
-					input.focus();
-				} else {
-					input.readOnly = true;
-					input.value = preset.value;
-				}
-			});
-		})();
-		</script>
 		<?php
 	}
 
@@ -395,7 +391,7 @@ class Pressed_Hog_Settings {
 		);
 		printf(
 			'<p class="description">%s</p>',
-			esc_html__( 'Paste a PostHog shared-dashboard link (Dashboard → Share) to embed the full dashboard on the PostHog admin page.', 'pressed-hog' )
+			esc_html__( 'Paste a PostHog shared-dashboard link (Dashboard → Share) to embed the full dashboard on the Pressed Hog analytics page.', 'pressed-hog' )
 		);
 	}
 

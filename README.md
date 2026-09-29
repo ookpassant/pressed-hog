@@ -1,6 +1,6 @@
-# Pressed Hog – PostHog Analytics for WordPress
+# Pressed Hog – Analytics for PostHog
 
-A WordPress plugin that installs [PostHog](https://posthog.com) product analytics on your site: tracking snippet, session replay, surveys, user identification, WooCommerce events, feature flags, cookie consent, an ad-blocker-resistant reverse proxy, and analytics inside wp-admin. Works with PostHog Cloud (US/EU) and self-hosted instances.
+A WordPress plugin that installs [PostHog](https://posthog.com) product analytics on your site: tracking snippet, session replay, surveys, user identification, WooCommerce events, feature flags, cookie consent, a first-party reverse proxy, and analytics inside wp-admin. Works with PostHog Cloud (US/EU) and self-hosted instances.
 
 **New here? Start with the [step-by-step walkthrough](docs/WALKTHROUGH.md)** — it covers installation through your first events with screenshots.
 
@@ -19,7 +19,7 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
 - **WooCommerce events** — `product_added_to_cart` (classic and block themes), `checkout_started`, and `order_completed` (with totals and line items, deduplicated per order and gated on the order key).
 - **Reverse proxy** — optionally serve PostHog through your own domain (`yoursite.com/phog/…`, prefix configurable). A rewrite rule relays requests server-side to your PostHog host, forwarding the visitor's IP via `X-Forwarded-For`. Ad-blockers that block PostHog's domains can't block first-party requests. Requires pretty permalinks.
 - **In-dashboard analytics** — a "PostHog" admin page with pageviews, unique visitors, deltas vs the previous period, a traffic chart, top pages, referrers, and devices over 7/30/90 days, queried server-side from PostHog's Query API with 5-minute caching. Includes a WP dashboard widget and an optional embedded PostHog shared dashboard.
-- **QR codes & trackable links** — a "QR Codes" page (under the PostHog menu) where you paste any URL of your own and get a campaign-tagged link back: UTM parameters (`utm_source` / `utm_medium` / `utm_campaign`) plus a unique `phg_qr` id, so each QR is individually attributable on the `$pageview` event in PostHog. QR codes are generated entirely in the browser — the URL is never sent to a third-party QR service — and downloadable as PNG or SVG. Saved links are listed on the page and exportable as a CSV spreadsheet.
+- **QR codes & trackable links** — a "QR Codes" page (under the Pressed Hog menu) where you paste any URL of your own and get a campaign-tagged link back: UTM parameters (`utm_source` / `utm_medium` / `utm_campaign`) plus a unique `phg_qr` id, so each QR is individually attributable on the `$pageview` event in PostHog. QR codes are generated entirely in the browser — the URL is never sent to a third-party QR service — and downloadable as PNG or SVG. Saved links are listed on the page and exportable as a CSV spreadsheet.
 - **Feature flags, server-side** — gate content with a shortcode or PHP helpers, evaluated against PostHog's `/decide` endpoint with a 60-second cache:
 
   ```
@@ -37,7 +37,7 @@ A WordPress plugin that installs [PostHog](https://posthog.com) product analytic
 ## Quick start
 
 1. Download this repository as a zip (or clone it into `wp-content/plugins/pressed-hog`).
-2. Activate **Pressed Hog – PostHog Analytics** in wp-admin.
+2. Activate **Pressed Hog – Analytics for PostHog** in wp-admin.
 3. The setup wizard opens automatically — pick your region, paste your project API key (`phc_…`), and follow the steps.
 
 Everything the wizard configures (plus role exclusions, the proxy, and the dashboard connection) is editable later at **Settings → Pressed Hog**. See the [walkthrough](docs/WALKTHROUGH.md) for the full tour.

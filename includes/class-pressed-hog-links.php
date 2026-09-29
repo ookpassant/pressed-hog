@@ -42,8 +42,11 @@ class Pressed_Hog_Links {
 		add_action( 'admin_post_' . self::ACTION_EXPORT, array( __CLASS__, 'handle_export' ) );
 	}
 
+	/** Hook suffix of the QR Codes page, set when the menu is registered. */
+	private static $hook_suffix = '';
+
 	public static function add_menu() {
-		add_submenu_page(
+		self::$hook_suffix = (string) add_submenu_page(
 			'pressed-hog-analytics',
 			__( 'QR Codes & Trackable Links', 'pressed-hog' ),
 			__( 'QR Codes', 'pressed-hog' ),
@@ -54,7 +57,7 @@ class Pressed_Hog_Links {
 	}
 
 	public static function enqueue( $hook ) {
-		if ( 'posthog_page_pressed-hog-links' !== $hook ) {
+		if ( '' === self::$hook_suffix || self::$hook_suffix !== $hook ) {
 			return;
 		}
 		wp_enqueue_style( 'pressed-hog-links', PRESSED_HOG_URL . 'assets/css/links.css', array(), PRESSED_HOG_VERSION );
@@ -148,9 +151,8 @@ class Pressed_Hog_Links {
 		}
 		check_admin_referer( self::ACTION_SAVE );
 
-		$raw_destination = isset( $_POST['destination'] ) ? wp_unslash( $_POST['destination'] ) : '';
-		$destination     = esc_url_raw( trim( $raw_destination ) );
-		$scheme          = wp_parse_url( $destination, PHP_URL_SCHEME );
+		$destination = isset( $_POST['destination'] ) ? esc_url_raw( wp_unslash( $_POST['destination'] ) ) : '';
+		$scheme      = wp_parse_url( $destination, PHP_URL_SCHEME );
 
 		if ( ! $destination || ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
 			self::redirect_back( array( 'phg_notice' => 'invalid' ) );
@@ -221,9 +223,9 @@ class Pressed_Hog_Links {
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename=' . $filename );
 
-		$out = fopen( 'php://output', 'w' );
 		// UTF-8 BOM so Excel opens accented characters correctly.
-		fwrite( $out, "\xEF\xBB\xBF" );
+		echo "\xEF\xBB\xBF"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal byte-order mark in a CSV download.
+		$out = fopen( 'php://output', 'w' );
 		fputcsv(
 			$out,
 			array(
@@ -252,7 +254,6 @@ class Pressed_Hog_Links {
 				)
 			);
 		}
-		fclose( $out );
 		exit;
 	}
 
@@ -446,9 +447,9 @@ class Pressed_Hog_Links {
 				esc_html__( 'QR code', 'pressed-hog' )
 			);
 			printf(
-				'<a href="%s" class="button-link ph-links-table__delete" onclick="return confirm(%s);">%s</a>',
+				'<a href="%s" class="button-link ph-links-table__delete" data-confirm="%s">%s</a>',
 				esc_url( $delete_url ),
-				esc_attr( wp_json_encode( __( 'Delete this link?', 'pressed-hog' ) ) ),
+				esc_attr__( 'Delete this link?', 'pressed-hog' ),
 				esc_html__( 'Delete', 'pressed-hog' )
 			);
 			echo '</td></tr>';

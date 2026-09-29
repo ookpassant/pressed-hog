@@ -30,17 +30,23 @@ class Pressed_Hog_Analytics {
 
 	public static function add_menu() {
 		add_menu_page(
-			__( 'PostHog Analytics', 'pressed-hog' ),
-			__( 'PostHog', 'pressed-hog' ),
+			__( 'Pressed Hog Analytics', 'pressed-hog' ),
+			__( 'Pressed Hog', 'pressed-hog' ),
 			'manage_options',
 			'pressed-hog-analytics',
 			array( __CLASS__, 'render_page' ),
-			'dashicons-chart-area',
-			3
+			'dashicons-chart-area'
 		);
 	}
 
 	public static function enqueue( $hook ) {
+		if ( 'index.php' === $hook && current_user_can( 'manage_options' ) ) {
+			// Minimal styling for the dashboard widget, so it doesn't need the full stylesheet.
+			wp_register_style( 'pressed-hog-widget', false, array(), PRESSED_HOG_VERSION );
+			wp_enqueue_style( 'pressed-hog-widget' );
+			wp_add_inline_style( 'pressed-hog-widget', '.ph-widget-tiles{display:flex;gap:24px;margin:4px 0 8px}.ph-widget-tile__value{display:block;font-size:22px;font-weight:600;line-height:1.2}.ph-widget-tile__label{display:block;color:#646970}.ph-delta--up{color:#006300}.ph-delta--down{color:#d03b3b}.ph-delta--none{color:#898781}' );
+			return;
+		}
 		if ( 'toplevel_page_pressed-hog-analytics' !== $hook ) {
 			return;
 		}
@@ -207,7 +213,7 @@ class Pressed_Hog_Analytics {
 		echo '<div class="wrap pressed-hog-analytics">';
 		printf(
 			'<h1>%s <a class="page-title-action" href="%s" target="_blank" rel="noopener noreferrer">%s</a></h1>',
-			esc_html__( 'PostHog Analytics', 'pressed-hog' ),
+			esc_html__( 'Pressed Hog Analytics', 'pressed-hog' ),
 			esc_url( $app_host ),
 			esc_html__( 'Open PostHog ↗', 'pressed-hog' )
 		);
@@ -413,7 +419,7 @@ class Pressed_Hog_Analytics {
 		}
 		wp_add_dashboard_widget(
 			'pressed_hog_summary',
-			__( 'PostHog — last 7 days', 'pressed-hog' ),
+			__( 'Pressed Hog — last 7 days', 'pressed-hog' ),
 			array( __CLASS__, 'render_widget' )
 		);
 	}
@@ -454,8 +460,5 @@ class Pressed_Hog_Analytics {
 			esc_url( admin_url( 'admin.php?page=pressed-hog-analytics' ) ),
 			esc_html__( 'View full analytics →', 'pressed-hog' )
 		);
-
-		// Minimal styling so the widget doesn't need the full stylesheet.
-		echo '<style>.ph-widget-tiles{display:flex;gap:24px;margin:4px 0 8px}.ph-widget-tile__value{display:block;font-size:22px;font-weight:600;line-height:1.2}.ph-widget-tile__label{display:block;color:#646970}.ph-delta--up{color:#006300}.ph-delta--down{color:#d03b3b}.ph-delta--none{color:#898781}</style>';
 	}
 }

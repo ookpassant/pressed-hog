@@ -1,7 +1,7 @@
 <?php
 /**
- * Reverse proxy: serves PostHog through the site's own domain so tracking
- * isn't blocked by ad-blockers that filter PostHog's domains.
+ * Reverse proxy: serves PostHog through the site's own domain, so analytics
+ * requests are first-party.
  *
  * A rewrite rule maps /{slug}/... to a handler that forwards the request
  * server-side to the configured PostHog host (or its asset host for

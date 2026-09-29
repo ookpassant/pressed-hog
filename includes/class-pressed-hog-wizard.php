@@ -312,8 +312,10 @@ class Pressed_Hog_Wizard {
 	public static function ajax_validate_key() {
 		self::check_ajax_request();
 
-		$host = self::sanitize_remote_host( wp_unslash( $_POST['host'] ?? '' ) );
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- nonce verified in check_ajax_request().
+		$host = self::sanitize_remote_host( esc_url_raw( wp_unslash( $_POST['host'] ?? '' ) ) );
 		$key  = sanitize_text_field( wp_unslash( $_POST['api_key'] ?? '' ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( '' === $key ) {
 			wp_send_json_error( array( 'code' => 'missing' ) );
@@ -365,7 +367,7 @@ class Pressed_Hog_Wizard {
 	public static function ajax_save_wizard() {
 		self::check_ajax_request();
 
-		$raw = json_decode( wp_unslash( $_POST['settings'] ?? '' ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized field-by-field below.
+		$raw = json_decode( wp_unslash( $_POST['settings'] ?? '' ), true ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified in check_ajax_request(); JSON sanitized field-by-field below.
 		if ( ! is_array( $raw ) ) {
 			wp_send_json_error( array( 'code' => 'bad_payload' ) );
 		}
@@ -412,7 +414,7 @@ class Pressed_Hog_Wizard {
 			wp_send_json_error( array( 'code' => 'missing_key' ) );
 		}
 
-		$auth = wp_remote_post(
+		$auth = wp_safe_remote_post(
 			$options['api_host'] . '/decide/?v=3',
 			array(
 				'timeout' => 8,
@@ -429,7 +431,7 @@ class Pressed_Hog_Wizard {
 			wp_send_json_error( array( 'code' => 'rejected' ) );
 		}
 
-		$response = wp_remote_post(
+		$response = wp_safe_remote_post(
 			$options['api_host'] . '/capture/',
 			array(
 				'timeout' => 8,
