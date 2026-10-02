@@ -1,5 +1,5 @@
 === Pressed Hog – PostHog Analytics ===
-Contributors: sea
+Contributors: seainthetrees
 Tags: posthog, analytics, feature flags, woocommerce, cookie consent
 Requires at least: 6.0
 Tested up to: 6.6

@@ -45,7 +45,7 @@ jobs:
           # Export exactly the committed tree into build/pressed-hog/ …
           git archive --format=tar --prefix="${SLUG}/" HEAD | tar -x -C build
           # … then drop files that don't belong in a runtime distributable.
-          rm -rf "build/${SLUG}/docs" "build/${SLUG}/.github"
+          rm -rf "build/${SLUG}/docs" "build/${SLUG}/.github" "build/${SLUG}/.wordpress-org" "build/${SLUG}/bin"
 
           ( cd build && zip -rq "../${SLUG}-${VERSION}.zip" "${SLUG}" )
           echo "ASSET=${SLUG}-${VERSION}.zip" >> "$GITHUB_ENV"
