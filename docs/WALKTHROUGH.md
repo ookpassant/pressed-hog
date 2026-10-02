@@ -128,7 +128,7 @@ This reads PostHog's Query API, which needs two extra values (the page walks you
 
 The key is only ever used server-side and results are cached for 5 minutes.
 
-Optionally, paste a PostHog **shared dashboard** link (Dashboard → Share in PostHog) into the "Embedded dashboard" setting to embed the full dashboard at the bottom of the page.
+Optionally, paste a PostHog **shared dashboard** link (Dashboard → Share in PostHog) into the "Shared dashboard link" setting to add a button that opens it in PostHog.
 
 ## 9. Feature flags in content and code
 
