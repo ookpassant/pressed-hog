@@ -6,6 +6,29 @@
  * Project Nayuki's QR Code generator (MIT-licensed, https://www.nayuki.io/),
  * producing a module bitmap we render as inline SVG (for on-screen preview and
  * SVG download) or onto a canvas (for PNG download).
+ *
+ * The QR encoder portion is derived from "QR Code generator library"
+ * (https://www.nayuki.io/page/qr-code-generator-library) and is used under
+ * the MIT License:
+ *
+ * Copyright (c) Project Nayuki. (MIT License)
+ * https://www.nayuki.io/page/qr-code-generator-library
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ * - The above copyright notice and this permission notice shall be included in
+ *   all copies or substantial portions of the Software.
+ * - The Software is provided "as is", without warranty of any kind, express or
+ *   implied, including but not limited to the warranties of merchantability,
+ *   fitness for a particular purpose and noninfringement. In no event shall the
+ *   authors or copyright holders be liable for any claim, damages or other
+ *   liability, whether in an action of contract, tort or otherwise, arising from,
+ *   out of or in connection with the Software or the use or other dealings in the
+ *   Software.
  */
 (function () {
 	'use strict';
@@ -616,6 +639,7 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		setupPreview();
 		setupCopyButtons();
+		setupDeleteConfirm();
 		setupModal();
 	});
 
@@ -667,6 +691,15 @@
 				navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
 			} else {
 				fallbackCopy(text, done);
+			}
+		});
+	}
+
+	function setupDeleteConfirm() {
+		document.addEventListener('click', function (e) {
+			var link = e.target.closest ? e.target.closest('[data-confirm]') : null;
+			if (link && !window.confirm(link.getAttribute('data-confirm'))) {
+				e.preventDefault();
 			}
 		});
 	}

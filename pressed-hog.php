@@ -1,22 +1,22 @@
 <?php
 /**
- * Plugin Name:       Pressed Hog – PostHog Analytics
+ * Plugin Name:       Pressed Hog – Analytics for PostHog
  * Plugin URI:        https://github.com/ookpassant/pressed-hog
  * Description:       Connect WordPress to PostHog: analytics snippet, user identification, WooCommerce events, feature flags, and cookie consent.
- * Version:           0.3.0
+ * Version:           0.3.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            sea
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       pressed-hog
+ * Text Domain:       pressed-hog-analytics-for-posthog
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PRESSED_HOG_VERSION', '0.3.0' );
+define( 'PRESSED_HOG_VERSION', '0.3.2' );
 define( 'PRESSED_HOG_FILE', __FILE__ );
 define( 'PRESSED_HOG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRESSED_HOG_URL', plugin_dir_url( __FILE__ ) );
@@ -50,9 +50,9 @@ function pressed_hog_default_options() {
 		'consent_mode'         => 'none', // none | banner | external
 		'consent_cookie_name'  => 'pressed_hog_consent',
 		'consent_cookie_value' => 'granted',
-		'banner_text'          => __( 'We use cookies to understand how you use our site and to improve your experience.', 'pressed-hog' ),
-		'banner_accept'        => __( 'Accept', 'pressed-hog' ),
-		'banner_decline'       => __( 'Decline', 'pressed-hog' ),
+		'banner_text'          => __( 'We use cookies to understand how you use our site and to improve your experience.', 'pressed-hog-analytics-for-posthog' ),
+		'banner_accept'        => __( 'Accept', 'pressed-hog-analytics-for-posthog' ),
+		'banner_decline'       => __( 'Decline', 'pressed-hog-analytics-for-posthog' ),
 		'woocommerce_events'   => 0,
 		'proxy_enabled'        => 0,
 		'proxy_slug'           => 'phog',
@@ -172,8 +172,6 @@ function pressed_hog_maybe_migrate_personal_api_key() {
 add_action(
 	'plugins_loaded',
 	function () {
-		load_plugin_textdomain( 'pressed-hog', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-
 		if ( is_admin() ) {
 			pressed_hog_maybe_migrate_autoload();
 			pressed_hog_maybe_migrate_personal_api_key();

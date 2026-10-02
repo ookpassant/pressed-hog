@@ -18,6 +18,7 @@ class Pressed_Hog_Settings {
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'maybe_notice_missing_key' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_filter(
 			'plugin_action_links_' . plugin_basename( PRESSED_HOG_FILE ),
 			array( __CLASS__, 'action_links' )
@@ -28,39 +29,49 @@ class Pressed_Hog_Settings {
 		$wizard_link   = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( Pressed_Hog_Wizard::url() ),
-			esc_html__( 'Setup wizard', 'pressed-hog' )
+			esc_html__( 'Setup wizard', 'pressed-hog-analytics-for-posthog' )
 		);
 		$settings_link = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ),
-			esc_html__( 'Settings', 'pressed-hog' )
+			esc_html__( 'Settings', 'pressed-hog-analytics-for-posthog' )
 		);
 		array_unshift( $links, $settings_link, $wizard_link );
 		return $links;
 	}
 
+	public static function enqueue( $hook ) {
+		if ( 'settings_page_pressed-hog' !== $hook ) {
+			return;
+		}
+		wp_enqueue_script( 'pressed-hog-settings', PRESSED_HOG_URL . 'assets/js/settings.js', array(), PRESSED_HOG_VERSION, true );
+	}
+
+	/**
+	 * Setup reminder, shown only on the Plugins screen so it never nags
+	 * across the rest of wp-admin.
+	 */
 	public static function maybe_notice_missing_key() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 		$options = pressed_hog_get_options();
 		$screen  = get_current_screen();
-		$on_own_screens = $screen && in_array( $screen->id, array( 'settings_page_pressed-hog', 'settings_page_' . Pressed_Hog_Wizard::PAGE_SLUG ), true );
-		if ( ! empty( $options['api_key'] ) || $on_own_screens ) {
+		if ( ! empty( $options['api_key'] ) || ! $screen || 'plugins' !== $screen->id ) {
 			return;
 		}
 		printf(
 			'<div class="notice notice-info is-dismissible"><p>%s <a href="%s">%s</a></p></div>',
-			esc_html__( 'Pressed Hog is active but not tracking yet — connect your PostHog project to get started.', 'pressed-hog' ),
+			esc_html__( 'Pressed Hog is active but not tracking yet — connect your PostHog project to get started.', 'pressed-hog-analytics-for-posthog' ),
 			esc_url( Pressed_Hog_Wizard::url() ),
-			esc_html__( 'Run the setup wizard', 'pressed-hog' )
+			esc_html__( 'Run the setup wizard', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
 	public static function add_menu() {
 		add_options_page(
-			__( 'Pressed Hog – PostHog', 'pressed-hog' ),
-			__( 'Pressed Hog', 'pressed-hog' ),
+			__( 'Pressed Hog – Analytics for PostHog', 'pressed-hog-analytics-for-posthog' ),
+			__( 'Pressed Hog', 'pressed-hog-analytics-for-posthog' ),
 			'manage_options',
 			'pressed-hog',
 			array( __CLASS__, 'render_page' )
@@ -81,82 +92,82 @@ class Pressed_Hog_Settings {
 		// Connection.
 		add_settings_section(
 			'pressed_hog_connection',
-			__( 'Connection', 'pressed-hog' ),
+			__( 'Connection', 'pressed-hog-analytics-for-posthog' ),
 			function () {
 				printf(
 					'<p>%s</p>',
-					esc_html__( 'Find your project API key in PostHog under Settings → Project. The key is public (it ships in page source), so it is safe to store here.', 'pressed-hog' )
+					esc_html__( 'Find your project API key in PostHog under Settings → Project. The key is public (it ships in page source), so it is safe to store here.', 'pressed-hog-analytics-for-posthog' )
 				);
 			},
 			'pressed-hog'
 		);
-		self::add_field( 'api_key', __( 'Project API key', 'pressed-hog' ), 'pressed_hog_connection', 'render_api_key' );
-		self::add_field( 'api_host', __( 'PostHog host', 'pressed-hog' ), 'pressed_hog_connection', 'render_api_host' );
+		self::add_field( 'api_key', __( 'Project API key', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_connection', 'render_api_key' );
+		self::add_field( 'api_host', __( 'PostHog host', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_connection', 'render_api_host' );
 
 		// Tracking.
-		add_settings_section( 'pressed_hog_tracking', __( 'Tracking', 'pressed-hog' ), '__return_null', 'pressed-hog' );
-		self::add_field( 'capture_pageviews', __( 'Capture pageviews', 'pressed-hog' ), 'pressed_hog_tracking', 'render_checkbox', array(
+		add_settings_section( 'pressed_hog_tracking', __( 'Tracking', 'pressed-hog-analytics-for-posthog' ), '__return_null', 'pressed-hog' );
+		self::add_field( 'capture_pageviews', __( 'Capture pageviews', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_tracking', 'render_checkbox', array(
 			'key'         => 'capture_pageviews',
-			'description' => __( 'Send a $pageview event on every page load.', 'pressed-hog' ),
+			'description' => __( 'Send a $pageview event on every page load.', 'pressed-hog-analytics-for-posthog' ),
 		) );
-		self::add_field( 'autocapture', __( 'Autocapture', 'pressed-hog' ), 'pressed_hog_tracking', 'render_checkbox', array(
+		self::add_field( 'autocapture', __( 'Autocapture', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_tracking', 'render_checkbox', array(
 			'key'         => 'autocapture',
-			'description' => __( 'Automatically capture clicks, form submissions, and other front-end interactions.', 'pressed-hog' ),
+			'description' => __( 'Automatically capture clicks, form submissions, and other front-end interactions.', 'pressed-hog-analytics-for-posthog' ),
 		) );
-		self::add_field( 'session_recording', __( 'Session recording', 'pressed-hog' ), 'pressed_hog_tracking', 'render_checkbox', array(
+		self::add_field( 'session_recording', __( 'Session recording', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_tracking', 'render_checkbox', array(
 			'key'         => 'session_recording',
-			'description' => __( 'Enable PostHog session replay. Recording must also be enabled in your PostHog project settings.', 'pressed-hog' ),
+			'description' => __( 'Enable PostHog session replay. Recording must also be enabled in your PostHog project settings.', 'pressed-hog-analytics-for-posthog' ),
 		) );
-		self::add_field( 'enable_surveys', __( 'Surveys', 'pressed-hog' ), 'pressed_hog_tracking', 'render_checkbox', array(
+		self::add_field( 'enable_surveys', __( 'Surveys', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_tracking', 'render_checkbox', array(
 			'key'         => 'enable_surveys',
-			'description' => __( 'Allow PostHog popover surveys to appear on your site.', 'pressed-hog' ),
+			'description' => __( 'Allow PostHog popover surveys to appear on your site.', 'pressed-hog-analytics-for-posthog' ),
 		) );
-		self::add_field( 'identify_users', __( 'Identify logged-in users', 'pressed-hog' ), 'pressed_hog_tracking', 'render_checkbox', array(
+		self::add_field( 'identify_users', __( 'Identify logged-in users', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_tracking', 'render_checkbox', array(
 			'key'         => 'identify_users',
-			'description' => __( 'Link events from logged-in visitors to their WordPress account (sends user ID, email, and display name to PostHog — personal data, so check your privacy policy).', 'pressed-hog' ),
+			'description' => __( 'Link events from logged-in visitors to their WordPress account (sends user ID, email, and display name to PostHog — personal data, so check your privacy policy).', 'pressed-hog-analytics-for-posthog' ),
 		) );
-		self::add_field( 'excluded_roles', __( 'Do not track these roles', 'pressed-hog' ), 'pressed_hog_tracking', 'render_excluded_roles' );
+		self::add_field( 'excluded_roles', __( 'Do not track these roles', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_tracking', 'render_excluded_roles' );
 
 		// Privacy & consent.
-		add_settings_section( 'pressed_hog_consent', __( 'Privacy & consent', 'pressed-hog' ), '__return_null', 'pressed-hog' );
-		self::add_field( 'consent_mode', __( 'Consent mode', 'pressed-hog' ), 'pressed_hog_consent', 'render_consent_mode' );
-		self::add_field( 'banner_text', __( 'Banner text', 'pressed-hog' ), 'pressed_hog_consent', 'render_banner_text' );
-		self::add_field( 'banner_buttons', __( 'Banner buttons', 'pressed-hog' ), 'pressed_hog_consent', 'render_banner_buttons' );
-		self::add_field( 'consent_cookie', __( 'External consent cookie', 'pressed-hog' ), 'pressed_hog_consent', 'render_consent_cookie' );
+		add_settings_section( 'pressed_hog_consent', __( 'Privacy & consent', 'pressed-hog-analytics-for-posthog' ), '__return_null', 'pressed-hog' );
+		self::add_field( 'consent_mode', __( 'Consent mode', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_consent', 'render_consent_mode' );
+		self::add_field( 'banner_text', __( 'Banner text', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_consent', 'render_banner_text' );
+		self::add_field( 'banner_buttons', __( 'Banner buttons', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_consent', 'render_banner_buttons' );
+		self::add_field( 'consent_cookie', __( 'External consent cookie', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_consent', 'render_consent_cookie' );
 
 		// Integrations.
-		add_settings_section( 'pressed_hog_integrations', __( 'Integrations', 'pressed-hog' ), '__return_null', 'pressed-hog' );
-		self::add_field( 'woocommerce_events', __( 'WooCommerce events', 'pressed-hog' ), 'pressed_hog_integrations', 'render_woocommerce' );
+		add_settings_section( 'pressed_hog_integrations', __( 'Integrations', 'pressed-hog-analytics-for-posthog' ), '__return_null', 'pressed-hog' );
+		self::add_field( 'woocommerce_events', __( 'WooCommerce events', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_integrations', 'render_woocommerce' );
 
 		// Reverse proxy.
 		add_settings_section(
 			'pressed_hog_proxy',
-			__( 'Reverse proxy', 'pressed-hog' ),
+			__( 'Reverse proxy', 'pressed-hog-analytics-for-posthog' ),
 			function () {
 				printf(
 					'<p>%s</p>',
-					esc_html__( 'Serve PostHog through your own domain so ad-blockers that filter PostHog’s domains can’t block tracking. Requests are relayed server-side by your WordPress site.', 'pressed-hog' )
+					esc_html__( 'Serve PostHog through your own domain, so analytics requests are first-party and delivered more reliably. Requests are relayed server-side by your WordPress site.', 'pressed-hog-analytics-for-posthog' )
 				);
 			},
 			'pressed-hog'
 		);
-		self::add_field( 'proxy_enabled', __( 'Enable reverse proxy', 'pressed-hog' ), 'pressed_hog_proxy', 'render_proxy' );
+		self::add_field( 'proxy_enabled', __( 'Enable reverse proxy', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_proxy', 'render_proxy' );
 
 		// Dashboard & stats.
 		add_settings_section(
 			'pressed_hog_dashboard',
-			__( 'In-dashboard analytics', 'pressed-hog' ),
+			__( 'In-dashboard analytics', 'pressed-hog-analytics-for-posthog' ),
 			function () {
 				printf(
 					'<p>%s</p>',
-					esc_html__( 'The PostHog admin page and dashboard widget read stats via PostHog’s Query API, which needs a personal API key (separate from the project key above) and your numeric project ID.', 'pressed-hog' )
+					esc_html__( 'The Pressed Hog analytics page and dashboard widget read stats via PostHog’s Query API, which needs a personal API key (separate from the project key above) and your numeric project ID.', 'pressed-hog-analytics-for-posthog' )
 				);
 			},
 			'pressed-hog'
 		);
-		self::add_field( 'personal_api_key', __( 'Personal API key', 'pressed-hog' ), 'pressed_hog_dashboard', 'render_personal_key' );
-		self::add_field( 'project_id', __( 'Project ID', 'pressed-hog' ), 'pressed_hog_dashboard', 'render_project_id' );
-		self::add_field( 'embed_url', __( 'Embedded dashboard (optional)', 'pressed-hog' ), 'pressed_hog_dashboard', 'render_embed_url' );
+		self::add_field( 'personal_api_key', __( 'Personal API key', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_dashboard', 'render_personal_key' );
+		self::add_field( 'project_id', __( 'Project ID', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_dashboard', 'render_project_id' );
+		self::add_field( 'embed_url', __( 'Shared dashboard link (optional)', 'pressed-hog-analytics-for-posthog' ), 'pressed_hog_dashboard', 'render_embed_url' );
 	}
 
 	private static function add_field( $id, $title, $section, $callback, $args = array() ) {
@@ -169,7 +180,7 @@ class Pressed_Hog_Settings {
 		}
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Pressed Hog – PostHog Analytics', 'pressed-hog' ); ?></h1>
+			<h1><?php esc_html_e( 'Pressed Hog – Analytics for PostHog', 'pressed-hog-analytics-for-posthog' ); ?></h1>
 			<form action="options.php" method="post">
 				<?php
 				settings_fields( 'pressed_hog' );
@@ -197,8 +208,8 @@ class Pressed_Hog_Settings {
 	public static function render_api_host() {
 		$options = pressed_hog_get_options();
 		$presets = array(
-			'https://us.i.posthog.com' => __( 'PostHog Cloud US', 'pressed-hog' ),
-			'https://eu.i.posthog.com' => __( 'PostHog Cloud EU', 'pressed-hog' ),
+			'https://us.i.posthog.com' => __( 'PostHog Cloud US', 'pressed-hog-analytics-for-posthog' ),
+			'https://eu.i.posthog.com' => __( 'PostHog Cloud EU', 'pressed-hog-analytics-for-posthog' ),
 		);
 		$is_custom = ! isset( $presets[ $options['api_host'] ] );
 		?>
@@ -208,28 +219,13 @@ class Pressed_Hog_Settings {
 					<?php echo esc_html( $label ); ?>
 				</option>
 			<?php endforeach; ?>
-			<option value="custom" <?php selected( $is_custom ); ?>><?php esc_html_e( 'Self-hosted / custom', 'pressed-hog' ); ?></option>
+			<option value="custom" <?php selected( $is_custom ); ?>><?php esc_html_e( 'Self-hosted / custom', 'pressed-hog-analytics-for-posthog' ); ?></option>
 		</select>
 		<input type="url" class="regular-text code" id="pressed-hog-host-input"
 			name="<?php echo esc_attr( PRESSED_HOG_OPTION ); ?>[api_host]"
 			value="<?php echo esc_attr( $options['api_host'] ); ?>"
-			<?php echo $is_custom ? '' : 'readonly'; ?> />
-		<p class="description"><?php esc_html_e( 'Where events are sent. Pick a PostHog Cloud region or enter your self-hosted instance URL.', 'pressed-hog' ); ?></p>
-		<script>
-		(function () {
-			var preset = document.getElementById('pressed-hog-host-preset');
-			var input = document.getElementById('pressed-hog-host-input');
-			preset.addEventListener('change', function () {
-				if (preset.value === 'custom') {
-					input.readOnly = false;
-					input.focus();
-				} else {
-					input.readOnly = true;
-					input.value = preset.value;
-				}
-			});
-		})();
-		</script>
+			<?php wp_readonly( $is_custom, false ); ?> />
+		<p class="description"><?php esc_html_e( 'Where events are sent. Pick a PostHog Cloud region or enter your self-hosted instance URL.', 'pressed-hog-analytics-for-posthog' ); ?></p>
 		<?php
 	}
 
@@ -262,16 +258,16 @@ class Pressed_Hog_Settings {
 		echo '</fieldset>';
 		printf(
 			'<p class="description">%s</p>',
-			esc_html__( 'Logged-in users with a checked role never receive the tracking snippet, keeping your own activity out of your analytics.', 'pressed-hog' )
+			esc_html__( 'Logged-in users with a checked role never receive the tracking snippet, keeping your own activity out of your analytics.', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
 	public static function render_consent_mode() {
 		$options = pressed_hog_get_options();
 		$modes   = array(
-			'none'     => __( 'No consent gate — start tracking immediately', 'pressed-hog' ),
-			'banner'   => __( 'Built-in cookie banner — hold tracking until the visitor accepts', 'pressed-hog' ),
-			'external' => __( 'External consent plugin — hold tracking until a consent cookie is set or the JavaScript API is called', 'pressed-hog' ),
+			'none'     => __( 'No consent gate — start tracking immediately', 'pressed-hog-analytics-for-posthog' ),
+			'banner'   => __( 'Built-in cookie banner — hold tracking until the visitor accepts', 'pressed-hog-analytics-for-posthog' ),
+			'external' => __( 'External consent plugin — hold tracking until a consent cookie is set or the JavaScript API is called', 'pressed-hog-analytics-for-posthog' ),
 		);
 		echo '<fieldset>';
 		foreach ( $modes as $value => $label ) {
@@ -286,7 +282,7 @@ class Pressed_Hog_Settings {
 		echo '</fieldset>';
 		printf(
 			'<p class="description">%s <code>window.pressedHog.grantConsent()</code> / <code>window.pressedHog.denyConsent()</code></p>',
-			esc_html__( 'In external mode, your consent plugin can signal acceptance by calling:', 'pressed-hog' )
+			esc_html__( 'In external mode, your consent plugin can signal acceptance by calling:', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
@@ -296,7 +292,7 @@ class Pressed_Hog_Settings {
 			'<textarea class="large-text" rows="2" name="%s[banner_text]">%s</textarea><p class="description">%s</p>',
 			esc_attr( PRESSED_HOG_OPTION ),
 			esc_textarea( $options['banner_text'] ),
-			esc_html__( 'Shown in the built-in cookie banner (banner mode only).', 'pressed-hog' )
+			esc_html__( 'Shown in the built-in cookie banner (banner mode only).', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
@@ -306,9 +302,9 @@ class Pressed_Hog_Settings {
 			'<input type="text" name="%1$s[banner_accept]" value="%2$s" placeholder="%3$s" /> <input type="text" name="%1$s[banner_decline]" value="%4$s" placeholder="%5$s" />',
 			esc_attr( PRESSED_HOG_OPTION ),
 			esc_attr( $options['banner_accept'] ),
-			esc_attr__( 'Accept', 'pressed-hog' ),
+			esc_attr__( 'Accept', 'pressed-hog-analytics-for-posthog' ),
 			esc_attr( $options['banner_decline'] ),
-			esc_attr__( 'Decline', 'pressed-hog' )
+			esc_attr__( 'Decline', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
@@ -319,19 +315,19 @@ class Pressed_Hog_Settings {
 			esc_attr( PRESSED_HOG_OPTION ),
 			esc_attr( $options['consent_cookie_name'] ),
 			esc_attr( $options['consent_cookie_value'] ),
-			esc_html__( 'In external mode, tracking starts when this cookie equals this value. The built-in banner also stores its decision in this cookie.', 'pressed-hog' )
+			esc_html__( 'In external mode, tracking starts when this cookie equals this value. The built-in banner also stores its decision in this cookie.', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
 	public static function render_woocommerce() {
 		$options    = pressed_hog_get_options();
 		$has_woo    = class_exists( 'WooCommerce' );
-		$suffix     = $has_woo ? '' : ' ' . __( '(WooCommerce is not active — this will take effect once it is.)', 'pressed-hog' );
+		$suffix     = $has_woo ? '' : ' ' . __( '(WooCommerce is not active — this will take effect once it is.)', 'pressed-hog-analytics-for-posthog' );
 		printf(
 			'<label><input type="checkbox" name="%1$s[woocommerce_events]" value="1" %2$s /> %3$s</label>',
 			esc_attr( PRESSED_HOG_OPTION ),
 			checked( ! empty( $options['woocommerce_events'] ), true, false ),
-			esc_html( __( 'Capture product_added_to_cart, checkout_started, and order_completed events.', 'pressed-hog' ) . $suffix )
+			esc_html( __( 'Capture product_added_to_cart, checkout_started, and order_completed events.', 'pressed-hog-analytics-for-posthog' ) . $suffix )
 		);
 	}
 
@@ -341,18 +337,18 @@ class Pressed_Hog_Settings {
 			'<label><input type="checkbox" name="%1$s[proxy_enabled]" value="1" %2$s /> %3$s</label>',
 			esc_attr( PRESSED_HOG_OPTION ),
 			checked( ! empty( $options['proxy_enabled'] ), true, false ),
-			esc_html__( 'Route tracking through this site', 'pressed-hog' )
+			esc_html__( 'Route tracking through this site', 'pressed-hog-analytics-for-posthog' )
 		);
 		printf(
 			'<p style="margin-top:8px;"><label>%s <code>%s/</code><input type="text" class="code" name="%s[proxy_slug]" value="%s" /></label></p>',
-			esc_html__( 'Path prefix:', 'pressed-hog' ),
+			esc_html__( 'Path prefix:', 'pressed-hog-analytics-for-posthog' ),
 			esc_html( untrailingslashit( home_url() ) ),
 			esc_attr( PRESSED_HOG_OPTION ),
 			esc_attr( $options['proxy_slug'] )
 		);
-		$notes = __( 'Avoid words like “posthog” or “analytics” in the prefix — path-based blockers look for them. Each event passes through PHP on your server; that is fine for most sites but adds load on very high-traffic ones.', 'pressed-hog' );
+		$notes = __( 'Avoid words like “posthog” or “analytics” in the prefix — path-based blockers look for them. Each event passes through PHP on your server; that is fine for most sites but adds load on very high-traffic ones.', 'pressed-hog-analytics-for-posthog' );
 		if ( ! get_option( 'permalink_structure' ) ) {
-			$notes .= ' ' . __( 'Note: the proxy requires pretty permalinks (Settings → Permalinks, anything except “Plain”).', 'pressed-hog' );
+			$notes .= ' ' . __( 'Note: the proxy requires pretty permalinks (Settings → Permalinks, anything except “Plain”).', 'pressed-hog-analytics-for-posthog' );
 		}
 		printf( '<p class="description">%s</p>', esc_html( $notes ) );
 	}
@@ -365,9 +361,9 @@ class Pressed_Hog_Settings {
 		);
 		printf(
 			'<p class="description">%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
-			esc_html__( 'Create one with read-only “Query” scope under', 'pressed-hog' ),
+			esc_html__( 'Create one with read-only “Query” scope under', 'pressed-hog-analytics-for-posthog' ),
 			esc_url( pressed_hog_app_host() . '/settings/user-api-keys' ),
-			esc_html__( 'PostHog → Settings → Personal API keys ↗', 'pressed-hog' )
+			esc_html__( 'PostHog → Settings → Personal API keys ↗', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
@@ -380,9 +376,9 @@ class Pressed_Hog_Settings {
 		);
 		printf(
 			'<p class="description">%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
-			esc_html__( 'The numeric ID shown at', 'pressed-hog' ),
+			esc_html__( 'The numeric ID shown at', 'pressed-hog-analytics-for-posthog' ),
 			esc_url( pressed_hog_app_host() . '/settings/project' ),
-			esc_html__( 'PostHog → Settings → Project ↗', 'pressed-hog' )
+			esc_html__( 'PostHog → Settings → Project ↗', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
@@ -395,7 +391,7 @@ class Pressed_Hog_Settings {
 		);
 		printf(
 			'<p class="description">%s</p>',
-			esc_html__( 'Paste a PostHog shared-dashboard link (Dashboard → Share) to embed the full dashboard on the PostHog admin page.', 'pressed-hog' )
+			esc_html__( 'Paste a PostHog shared-dashboard link (Dashboard → Share) to add a link to it on the Pressed Hog analytics page.', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 

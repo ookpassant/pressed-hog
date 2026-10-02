@@ -117,7 +117,7 @@ The tracking script and all events now flow via `yoursite.com/phog/…` and your
 
 ## 8. Analytics inside wp-admin
 
-The **PostHog** menu item in wp-admin shows your traffic without leaving WordPress — pageviews, unique visitors, deltas vs the previous period, a traffic chart, top pages, referrers, and devices, over the last 7/30/90 days — plus a summary widget on the WP Dashboard:
+The **Pressed Hog** menu item in wp-admin shows your traffic without leaving WordPress — pageviews, unique visitors, deltas vs the previous period, a traffic chart, top pages, referrers, and devices, over the last 7/30/90 days — plus a summary widget on the WP Dashboard:
 
 ![The PostHog analytics page in wp-admin](images/analytics.png)
 
@@ -128,7 +128,7 @@ This reads PostHog's Query API, which needs two extra values (the page walks you
 
 The key is only ever used server-side and results are cached for 5 minutes.
 
-Optionally, paste a PostHog **shared dashboard** link (Dashboard → Share in PostHog) into the "Embedded dashboard" setting to embed the full dashboard at the bottom of the page.
+Optionally, paste a PostHog **shared dashboard** link (Dashboard → Share in PostHog) into the "Shared dashboard link" setting to add a button that opens it in PostHog.
 
 ## 9. Feature flags in content and code
 

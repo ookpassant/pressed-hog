@@ -11,14 +11,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Pressed_Hog_Tracker {
 
+	/** Script handle the snippet is attached to; other scripts depend on it. */
+	const HANDLE = 'pressed-hog';
+
 	/**
-	 * The official posthog-js loader snippet. The real library is fetched
-	 * asynchronously from the configured api_host's asset domain.
+	 * The official posthog-js loader snippet, as published by PostHog (it is
+	 * shipped minified upstream). The real library is fetched asynchronously
+	 * from the configured api_host's asset domain.
+	 *
+	 * Unminified source and documentation:
+	 * - https://posthog.com/docs/libraries/js (installation snippet)
+	 * - https://github.com/PostHog/posthog-js (library source, MIT License)
 	 */
 	const SNIPPET = '!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);';
 
 	public static function init() {
-		add_action( 'wp_head', array( __CLASS__, 'output_snippet' ), 1 );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_snippet' ), 5 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_consent_assets' ) );
 	}
 
@@ -49,7 +57,11 @@ class Pressed_Hog_Tracker {
 		return (bool) apply_filters( 'pressed_hog_is_active', true );
 	}
 
-	public static function output_snippet() {
+	/**
+	 * Register the snippet as an inline script on a source-less handle, so
+	 * it prints in the <head> through the normal script loader.
+	 */
+	public static function enqueue_snippet() {
 		if ( ! self::is_active() ) {
 			return;
 		}
@@ -76,7 +88,9 @@ class Pressed_Hog_Tracker {
 			$config['ui_host'] = $ui_host;
 		}
 		if ( $consent_gated ) {
-			$config['opt_out_capturing_by_default'] = true;
+			// Capture nothing and write no cookies/localStorage until consent.
+			$config['opt_out_capturing_by_default']   = true;
+			$config['opt_out_persistence_by_default'] = true;
 		}
 
 		/**
@@ -102,12 +116,17 @@ class Pressed_Hog_Tracker {
 			);
 		}
 
-		printf(
-			"<script>\n%s\nposthog.init(%s,%s);%s\n</script>\n",
-			self::SNIPPET, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static, trusted JS snippet.
-			wp_json_encode( $options['api_key'] ),
-			wp_json_encode( $config ),
-			$identify_js // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from wp_json_encode() above.
+		wp_register_script( self::HANDLE, false, array(), PRESSED_HOG_VERSION, false );
+		wp_enqueue_script( self::HANDLE );
+		wp_add_inline_script(
+			self::HANDLE,
+			sprintf(
+				"%s\nposthog.init(%s,%s);%s",
+				self::SNIPPET,
+				wp_json_encode( $options['api_key'] ),
+				wp_json_encode( $config ),
+				$identify_js
+			)
 		);
 	}
 
@@ -124,7 +143,7 @@ class Pressed_Hog_Tracker {
 		wp_enqueue_script(
 			'pressed-hog-consent',
 			PRESSED_HOG_URL . 'assets/js/consent.js',
-			array(),
+			array( self::HANDLE ),
 			PRESSED_HOG_VERSION,
 			array( 'in_footer' => true )
 		);

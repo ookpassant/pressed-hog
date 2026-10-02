@@ -1,10 +1,10 @@
-=== Pressed Hog – PostHog Analytics ===
+=== Pressed Hog – Analytics for PostHog ===
 Contributors: seainthetrees
 Tags: posthog, analytics, feature flags, woocommerce, cookie consent
 Requires at least: 6.0
-Tested up to: 6.6
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,8 +24,8 @@ Pressed Hog installs [PostHog](https://posthog.com) product analytics on your Wo
 * Consent handling with three modes: no gate, a built-in cookie banner, or integration with an external consent plugin via a cookie or JavaScript API.
 * WooCommerce events: `product_added_to_cart`, `checkout_started`, and `order_completed` (with order totals and line items, deduplicated per order).
 * Server-side feature flags: a `[posthog_flag key="my-flag"]…[/posthog_flag]` shortcode to gate content, plus `pressed_hog_is_feature_enabled()` and `pressed_hog_get_feature_flag()` template helpers.
-* Reverse proxy: serve PostHog through your own domain (e.g. `yoursite.com/phog/…`) so ad-blockers that filter PostHog's domains can't block tracking.
-* In-dashboard analytics: a PostHog admin page with pageviews, unique visitors, a traffic chart, top pages, referrers, and devices — plus a WordPress dashboard widget and an optional embedded PostHog shared dashboard. Requires a personal API key with read-only Query scope.
+* Reverse proxy: serve PostHog through your own domain (e.g. `yoursite.com/phog/…`) so analytics requests are first-party and delivered more reliably.
+* In-dashboard analytics: a Pressed Hog admin page with pageviews, unique visitors, a traffic chart, top pages, referrers, and devices — plus a WordPress dashboard widget and an optional link to a PostHog shared dashboard. Requires a personal API key with read-only Query scope.
 * QR codes & trackable links: turn any URL of your own into a campaign-tagged link (UTM parameters plus a unique per-link id so PostHog can attribute each QR individually), generate its QR code right in the browser (nothing is sent to a third-party QR service), keep a saved list of your links, and export the whole list as a downloadable CSV spreadsheet. Download each QR as PNG or SVG.
 
 **Consent integration for developers**
@@ -41,9 +41,26 @@ In "external" consent mode, tracking stays off until either the configured cooki
 
 PostHog is a registered trademark of PostHog, Inc. This plugin is an independent integration and is not affiliated with or endorsed by PostHog, Inc.
 
+== External services ==
+
+This plugin connects your site to [PostHog](https://posthog.com), a product analytics service. Nothing is sent anywhere until you enter a PostHog project API key. Depending on the features you enable, data goes to PostHog Cloud US (`us.posthog.com`, `us.i.posthog.com`, `us-assets.i.posthog.com`), PostHog Cloud EU (`eu.posthog.com`, `eu.i.posthog.com`, `eu-assets.i.posthog.com`), or the self-hosted PostHog instance you configure.
+
+* **Tracking library (visitors' browsers).** On every front-end page view by a tracked visitor, the browser loads the posthog-js library from PostHog's asset host. It then sends the events you enabled: pageviews (URL, referrer, browser, device, screen size), autocaptured clicks and form submissions, session recordings, and survey responses, together with an anonymous ID and the visitor's IP address. When a consent mode is enabled, nothing is captured and no PostHog cookie is stored until the visitor consents.
+* **User identification (optional).** If "Identify logged-in users" is on, the logged-in user's WordPress user ID, email address, and display name are sent to PostHog.
+* **WooCommerce events (optional).** If enabled, add-to-cart, checkout-started, and order-completed events are sent, including product IDs, product names, quantities, order totals, and currency.
+* **Reverse proxy (optional).** If enabled, visitors' tracking requests pass through your server to PostHog, with the visitor's IP address forwarded in the `X-Forwarded-For` header. The posthog-js library files are still loaded from PostHog's asset host.
+* **Feature flags (server-side).** When a page uses the `[posthog_flag]` shortcode or the flag helper functions, your server sends your project API key and the visitor's PostHog ID (or WordPress user ID for logged-in users) to PostHog's `/decide` endpoint. Results are cached for 60 seconds.
+* **Setup wizard.** When you validate your key or send a test event, your server sends the project API key, and for the test event your user ID, site URL, and plugin version, to PostHog.
+* **In-dashboard analytics (optional).** When an administrator opens the analytics page or dashboard widget, your server sends read-only queries to PostHog's Query API using your personal API key and project ID. Results are cached for 5 minutes.
+
+PostHog's terms of service: https://posthog.com/terms
+PostHog's privacy policy: https://posthog.com/privacy
+
+If you self-host PostHog, the data goes only to your own instance, and your own terms and privacy policy apply.
+
 == Installation ==
 
-1. Upload the plugin to `/wp-content/plugins/pressed-hog`, or install it via the Plugins screen.
+1. Upload the plugin to `/wp-content/plugins/pressed-hog-analytics-for-posthog`, or install it via the Plugins screen.
 2. Activate it — you'll be taken straight to the setup wizard.
 3. Follow the wizard: pick your PostHog region, paste your project API key (starts with `phc_`), choose tracking and consent options, and send a test event.
 
@@ -79,7 +96,31 @@ They're saved in your WordPress database (the `pressed_hog_links` option) and li
 
 It is stored in its own non-autoloaded WordPress option. Public tracking requests load a separate settings option and do not retrieve the credential. It is only ever used server-side (never printed on the front end). Create it with the read-only Query scope so it can't modify anything.
 
+== Screenshots ==
+
+1. Setup wizard: connect your PostHog project and validate the API key.
+2. Setup wizard: choose what to track.
+3. Setup wizard: choose how cookie consent is handled.
+4. The settings page.
+5. In-dashboard analytics with traffic chart, top pages, referrers, and devices.
+6. The built-in cookie consent banner.
+
 == Changelog ==
+
+= 0.3.2 =
+* The optional PostHog shared dashboard is now linked from the analytics page instead of embedded in an iframe.
+* The reverse proxy now relays only PostHog's JSON API responses; library files load directly from PostHog's asset host.
+* Text domain changed to `pressed-hog-analytics-for-posthog` to match the WordPress.org plugin slug.
+* All admin output is escaped at the point of output.
+* Fixed a PHP deprecation notice on the setup wizard screen.
+
+= 0.3.1 =
+* Renamed to "Pressed Hog – Analytics for PostHog"; the admin menu is now labelled "Pressed Hog" and no longer sits at the top of the menu.
+* The tracking snippet, settings script, and dashboard-widget styles now go through the WordPress script and style loaders instead of inline tags.
+* With a consent mode on, posthog-js no longer stores cookies or localStorage until the visitor consents.
+* The "connect PostHog" reminder now appears only on the Plugins screen.
+* Uninstall now also removes WooCommerce order meta and cleans up every site on a multisite network.
+* Documented the external services the plugin uses.
 
 = 0.3.0 =
 * New "QR Codes" page (under the PostHog menu): create trackable links from your own URLs with UTM tags and a unique tracking id, generate QR codes, save your links, and download the list as a CSV spreadsheet. QR codes are generated entirely in the browser and can be downloaded as PNG or SVG.

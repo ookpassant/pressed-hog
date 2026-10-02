@@ -1,11 +1,12 @@
 <?php
 /**
- * Reverse proxy: serves PostHog through the site's own domain so tracking
- * isn't blocked by ad-blockers that filter PostHog's domains.
+ * Reverse proxy: serves PostHog through the site's own domain, so analytics
+ * requests are first-party.
  *
- * A rewrite rule maps /{slug}/... to a handler that forwards the request
- * server-side to the configured PostHog host (or its asset host for
- * /static/...), passing the visitor's IP along in X-Forwarded-For.
+ * A rewrite rule maps /{slug}/... to a handler that forwards API requests
+ * server-side to the configured PostHog host, passing the visitor's IP along
+ * in X-Forwarded-For, and redirects script requests (/static/, /array/) to
+ * PostHog's own asset URLs.
  *
  * @package Pressed_Hog
  */
@@ -116,6 +117,23 @@ class Pressed_Hog_Proxy {
 			$url = add_query_arg( $params, $url );
 		}
 
+		// Script assets (the posthog-js library and its lazy-loaded extensions
+		// under /static/, remote config under /array/) are JavaScript, not data:
+		// send the browser to PostHog's own URL for them instead of relaying
+		// the file body through PHP.
+		if ( in_array( $segment, array( 'static', 'array' ), true ) ) {
+			$target = wp_parse_url( $target_host, PHP_URL_HOST );
+			add_filter(
+				'allowed_redirect_hosts',
+				function ( $hosts ) use ( $target ) {
+					$hosts[] = $target;
+					return $hosts;
+				}
+			);
+			wp_safe_redirect( $url, 302, 'Pressed Hog' );
+			exit;
+		}
+
 		$headers = array();
 		if ( ! empty( $_SERVER['CONTENT_TYPE'] ) ) {
 			$headers['Content-Type'] = sanitize_text_field( wp_unslash( $_SERVER['CONTENT_TYPE'] ) );
@@ -156,23 +174,25 @@ class Pressed_Hog_Proxy {
 		$response = wp_remote_request( $url, $args );
 
 		if ( is_wp_error( $response ) ) {
-			status_header( 502 );
-			header( 'Content-Type: application/json' );
-			echo '{"status":0}';
+			wp_send_json( array( 'status' => 0 ), 502 );
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		$body = wp_remote_retrieve_body( $response );
+
+		// HEAD/OPTIONS and some ingestion responses carry no body.
+		if ( '' === $body ) {
+			status_header( $code );
 			exit;
 		}
 
-		status_header( wp_remote_retrieve_response_code( $response ) );
-		foreach ( array( 'content-type', 'cache-control' ) as $name ) {
-			$value = wp_remote_retrieve_header( $response, $name );
-			if ( is_array( $value ) ) {
-				$value = reset( $value );
-			}
-			if ( $value ) {
-				header( ucwords( $name, '-' ) . ': ' . $value );
-			}
+		// PostHog's API endpoints answer in JSON: decode it and re-encode it
+		// with wp_send_json() rather than echoing the remote body as-is.
+		// Decoded as objects (not arrays) so "{}" round-trips as "{}".
+		$data = json_decode( $body );
+		if ( null === $data && 'null' !== trim( $body ) ) {
+			wp_send_json( array( 'status' => 0 ), 502 );
 		}
-		echo wp_remote_retrieve_body( $response ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw passthrough of the PostHog response (JS/JSON), not HTML.
-		exit;
+		wp_send_json( $data, $code );
 	}
 }

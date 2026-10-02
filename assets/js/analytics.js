@@ -9,14 +9,13 @@
 	'use strict';
 
 	var container = document.getElementById('pressed-hog-chart');
-	var dataEl = document.getElementById('pressed-hog-chart-data');
-	if (!container || !dataEl) {
+	if (!container) {
 		return;
 	}
 
 	var series;
 	try {
-		series = JSON.parse(dataEl.textContent || '[]');
+		series = JSON.parse(container.getAttribute('data-series') || '[]');
 	} catch (e) {
 		series = [];
 	}

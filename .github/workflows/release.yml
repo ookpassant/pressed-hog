@@ -2,8 +2,9 @@ name: Build & release plugin zip
 
 # Builds an install-ready WordPress plugin zip and attaches it to a GitHub
 # Release whenever a v* tag is pushed. The zip unpacks to a single
-# `pressed-hog/` folder (forward-slash paths, LF line endings) so it can be
-# uploaded straight through Plugins -> Add New -> Upload Plugin.
+# `pressed-hog-analytics-for-posthog/` folder (the WordPress.org slug), with
+# forward-slash paths and LF line endings, so it can be uploaded straight
+# through Plugins -> Add New -> Upload Plugin.
 
 on:
   push:
@@ -30,11 +31,12 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
-          SLUG="pressed-hog"
+          SLUG="pressed-hog-analytics-for-posthog"
+          MAIN_FILE="pressed-hog.php"
 
           # Confirm the plugin header version matches the tag, so a mistagged
           # release fails loudly instead of shipping the wrong version.
-          HEADER_VERSION="$(sed -n 's/^ \* Version:[[:space:]]*//p' "${SLUG}.php" | head -1 | tr -d '[:space:]')"
+          HEADER_VERSION="$(sed -n 's/^ \* Version:[[:space:]]*//p' "${MAIN_FILE}" | head -1 | tr -d '[:space:]')"
           if [ "${HEADER_VERSION}" != "${VERSION}" ]; then
             echo "::error::Tag ${GITHUB_REF_NAME} (=${VERSION}) does not match plugin header version ${HEADER_VERSION}"
             exit 1
@@ -42,7 +44,7 @@ jobs:
 
           rm -rf build
           mkdir build
-          # Export exactly the committed tree into build/pressed-hog/ …
+          # Export exactly the committed tree into build/${SLUG}/ …
           git archive --format=tar --prefix="${SLUG}/" HEAD | tar -x -C build
           # … then drop files that don't belong in a runtime distributable.
           rm -rf "build/${SLUG}/docs" "build/${SLUG}/.github" "build/${SLUG}/.wordpress-org" "build/${SLUG}/bin"

@@ -23,6 +23,7 @@ class Pressed_Hog_Wizard {
 			return;
 		}
 		add_action( 'admin_menu', array( __CLASS__, 'register_page' ), 20 );
+		add_action( 'admin_head', array( __CLASS__, 'hide_page' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_redirect' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'wp_ajax_pressed_hog_validate_key', array( __CLASS__, 'ajax_validate_key' ) );
@@ -35,18 +36,26 @@ class Pressed_Hog_Wizard {
 	}
 
 	/**
-	 * Register the wizard as a Settings subpage, then hide it from the menu
-	 * (it stays reachable by URL).
+	 * Register the wizard as a Settings subpage. It is hidden from the menu
+	 * later, in hide_page(), and stays reachable by URL.
 	 */
 	public static function register_page() {
 		add_submenu_page(
 			'options-general.php',
-			__( 'Pressed Hog Setup', 'pressed-hog' ),
-			__( 'Pressed Hog Setup', 'pressed-hog' ),
+			__( 'Pressed Hog Setup', 'pressed-hog-analytics-for-posthog' ),
+			__( 'Pressed Hog Setup', 'pressed-hog-analytics-for-posthog' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( __CLASS__, 'render_page' )
 		);
+	}
+
+	/**
+	 * Hide the wizard from the Settings menu. Runs on admin_head — after the
+	 * page title has been resolved, but before the menu is rendered — because
+	 * removing it on admin_menu leaves the wizard screen without a title.
+	 */
+	public static function hide_page() {
 		remove_submenu_page( 'options-general.php', self::PAGE_SLUG );
 	}
 
@@ -114,17 +123,17 @@ class Pressed_Hog_Wizard {
 				'settingsUrl' => admin_url( 'options-general.php?page=pressed-hog' ),
 				'siteUrl'     => home_url( '/' ),
 				'i18n'        => array(
-					'validating'    => __( 'Checking your key…', 'pressed-hog' ),
-					'valid'         => __( 'Connected! Your key works on this host.', 'pressed-hog' ),
-					'invalid'       => __( 'That key was rejected by this host. Double-check the key and the region.', 'pressed-hog' ),
-					'unreachable'   => __( 'Could not reach the PostHog host from your server. You can continue anyway — browser tracking may still work.', 'pressed-hog' ),
-					'keyMissing'    => __( 'Enter your project API key first.', 'pressed-hog' ),
-					'saving'        => __( 'Saving…', 'pressed-hog' ),
-					'saveFailed'    => __( 'Saving failed. Please try again.', 'pressed-hog' ),
-					'sendingTest'   => __( 'Sending test event…', 'pressed-hog' ),
-					'testSent'      => __( 'Test event sent! Look for "pressed_hog_test_event" in your PostHog activity feed.', 'pressed-hog' ),
-					'testFailed'    => __( 'The test event was not accepted. Check your key and host on the settings page.', 'pressed-hog' ),
-					'continueAnyway' => __( 'Continue anyway', 'pressed-hog' ),
+					'validating'    => __( 'Checking your key…', 'pressed-hog-analytics-for-posthog' ),
+					'valid'         => __( 'Connected! Your key works on this host.', 'pressed-hog-analytics-for-posthog' ),
+					'invalid'       => __( 'That key was rejected by this host. Double-check the key and the region.', 'pressed-hog-analytics-for-posthog' ),
+					'unreachable'   => __( 'Could not reach the PostHog host from your server. You can continue anyway — browser tracking may still work.', 'pressed-hog-analytics-for-posthog' ),
+					'keyMissing'    => __( 'Enter your project API key first.', 'pressed-hog-analytics-for-posthog' ),
+					'saving'        => __( 'Saving…', 'pressed-hog-analytics-for-posthog' ),
+					'saveFailed'    => __( 'Saving failed. Please try again.', 'pressed-hog-analytics-for-posthog' ),
+					'sendingTest'   => __( 'Sending test event…', 'pressed-hog-analytics-for-posthog' ),
+					'testSent'      => __( 'Test event sent! Look for "pressed_hog_test_event" in your PostHog activity feed.', 'pressed-hog-analytics-for-posthog' ),
+					'testFailed'    => __( 'The test event was not accepted. Check your key and host on the settings page.', 'pressed-hog-analytics-for-posthog' ),
+					'continueAnyway' => __( 'Continue anyway', 'pressed-hog-analytics-for-posthog' ),
 				),
 			)
 		);
@@ -142,49 +151,49 @@ class Pressed_Hog_Wizard {
 		?>
 		<div class="wrap pressed-hog-wizard-wrap">
 			<div class="pressed-hog-wizard" id="pressed-hog-wizard">
-				<h1 class="pressed-hog-wizard__title"><?php esc_html_e( 'Set up PostHog', 'pressed-hog' ); ?></h1>
+				<h1 class="pressed-hog-wizard__title"><?php esc_html_e( 'Set up PostHog', 'pressed-hog-analytics-for-posthog' ); ?></h1>
 
 				<ol class="pressed-hog-wizard__steps">
-					<li data-step-label="1" class="is-current"><?php esc_html_e( 'Connect', 'pressed-hog' ); ?></li>
-					<li data-step-label="2"><?php esc_html_e( 'Tracking', 'pressed-hog' ); ?></li>
-					<li data-step-label="3"><?php esc_html_e( 'Consent', 'pressed-hog' ); ?></li>
-					<li data-step-label="4"><?php esc_html_e( 'Done', 'pressed-hog' ); ?></li>
+					<li data-step-label="1" class="is-current"><?php esc_html_e( 'Connect', 'pressed-hog-analytics-for-posthog' ); ?></li>
+					<li data-step-label="2"><?php esc_html_e( 'Tracking', 'pressed-hog-analytics-for-posthog' ); ?></li>
+					<li data-step-label="3"><?php esc_html_e( 'Consent', 'pressed-hog-analytics-for-posthog' ); ?></li>
+					<li data-step-label="4"><?php esc_html_e( 'Done', 'pressed-hog-analytics-for-posthog' ); ?></li>
 				</ol>
 
 				<noscript>
 					<p>
-						<?php esc_html_e( 'The setup wizard needs JavaScript.', 'pressed-hog' ); ?>
-						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ); ?>"><?php esc_html_e( 'Use the settings page instead.', 'pressed-hog' ); ?></a>
+						<?php esc_html_e( 'The setup wizard needs JavaScript.', 'pressed-hog-analytics-for-posthog' ); ?>
+						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ); ?>"><?php esc_html_e( 'Use the settings page instead.', 'pressed-hog-analytics-for-posthog' ); ?></a>
 					</p>
 				</noscript>
 
 				<!-- Step 1: Connect -->
 				<section class="pressed-hog-wizard__step is-active" data-step="1">
-					<h2><?php esc_html_e( 'Connect to PostHog', 'pressed-hog' ); ?></h2>
-					<p><?php esc_html_e( 'Choose where your PostHog project lives and paste its API key.', 'pressed-hog' ); ?></p>
+					<h2><?php esc_html_e( 'Connect to PostHog', 'pressed-hog-analytics-for-posthog' ); ?></h2>
+					<p><?php esc_html_e( 'Choose where your PostHog project lives and paste its API key.', 'pressed-hog-analytics-for-posthog' ); ?></p>
 
 					<label class="pressed-hog-field">
-						<span><?php esc_html_e( 'Region', 'pressed-hog' ); ?></span>
+						<span><?php esc_html_e( 'Region', 'pressed-hog-analytics-for-posthog' ); ?></span>
 						<select id="phw-region">
-							<option value="https://us.i.posthog.com"><?php esc_html_e( 'PostHog Cloud US', 'pressed-hog' ); ?></option>
-							<option value="https://eu.i.posthog.com"><?php esc_html_e( 'PostHog Cloud EU', 'pressed-hog' ); ?></option>
-							<option value="custom"><?php esc_html_e( 'Self-hosted / custom', 'pressed-hog' ); ?></option>
+							<option value="https://us.i.posthog.com"><?php esc_html_e( 'PostHog Cloud US', 'pressed-hog-analytics-for-posthog' ); ?></option>
+							<option value="https://eu.i.posthog.com"><?php esc_html_e( 'PostHog Cloud EU', 'pressed-hog-analytics-for-posthog' ); ?></option>
+							<option value="custom"><?php esc_html_e( 'Self-hosted / custom', 'pressed-hog-analytics-for-posthog' ); ?></option>
 						</select>
 					</label>
 
 					<label class="pressed-hog-field" id="phw-host-field" hidden>
-						<span><?php esc_html_e( 'Instance URL', 'pressed-hog' ); ?></span>
+						<span><?php esc_html_e( 'Instance URL', 'pressed-hog-analytics-for-posthog' ); ?></span>
 						<input type="url" id="phw-host" class="regular-text code" placeholder="https://posthog.example.com" />
 					</label>
 
 					<label class="pressed-hog-field">
-						<span><?php esc_html_e( 'Project API key', 'pressed-hog' ); ?></span>
+						<span><?php esc_html_e( 'Project API key', 'pressed-hog-analytics-for-posthog' ); ?></span>
 						<input type="text" id="phw-key" class="regular-text code" placeholder="phc_…" value="<?php echo esc_attr( $options['api_key'] ); ?>" />
 					</label>
 
 					<p class="description">
 						<a id="phw-key-link" href="https://us.posthog.com/settings/project" target="_blank" rel="noopener noreferrer">
-							<?php esc_html_e( 'Find your key in PostHog → Settings → Project ↗', 'pressed-hog' ); ?>
+							<?php esc_html_e( 'Find your key in PostHog → Settings → Project ↗', 'pressed-hog-analytics-for-posthog' ); ?>
 						</a>
 					</p>
 
@@ -193,45 +202,45 @@ class Pressed_Hog_Wizard {
 					<div class="pressed-hog-wizard__nav">
 						<span></span>
 						<button type="button" class="button button-primary button-hero" id="phw-validate">
-							<?php esc_html_e( 'Validate & continue', 'pressed-hog' ); ?>
+							<?php esc_html_e( 'Validate & continue', 'pressed-hog-analytics-for-posthog' ); ?>
 						</button>
 					</div>
 				</section>
 
 				<!-- Step 2: Tracking -->
 				<section class="pressed-hog-wizard__step" data-step="2">
-					<h2><?php esc_html_e( 'What should be tracked?', 'pressed-hog' ); ?></h2>
+					<h2><?php esc_html_e( 'What should be tracked?', 'pressed-hog-analytics-for-posthog' ); ?></h2>
 
-					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-pageviews" <?php checked( $options['capture_pageviews'] ); ?> /> <strong><?php esc_html_e( 'Pageviews', 'pressed-hog' ); ?></strong> — <?php esc_html_e( 'send a $pageview event on every page load.', 'pressed-hog' ); ?></label>
-					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-autocapture" <?php checked( $options['autocapture'] ); ?> /> <strong><?php esc_html_e( 'Autocapture', 'pressed-hog' ); ?></strong> — <?php esc_html_e( 'clicks, form submissions, and other interactions.', 'pressed-hog' ); ?></label>
-					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-recording" <?php checked( $options['session_recording'] ); ?> /> <strong><?php esc_html_e( 'Session replay', 'pressed-hog' ); ?></strong> — <?php esc_html_e( 'record visitor sessions (also needs to be enabled in PostHog).', 'pressed-hog' ); ?></label>
-					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-surveys" <?php checked( $options['enable_surveys'] ); ?> /> <strong><?php esc_html_e( 'Surveys', 'pressed-hog' ); ?></strong> — <?php esc_html_e( 'allow PostHog popover surveys on your site.', 'pressed-hog' ); ?></label>
-					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-identify" <?php checked( $options['identify_users'] ); ?> /> <strong><?php esc_html_e( 'Identify logged-in users', 'pressed-hog' ); ?></strong> — <?php esc_html_e( 'link events to WordPress accounts (sends user ID, email, and name — personal data).', 'pressed-hog' ); ?></label>
+					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-pageviews" <?php checked( $options['capture_pageviews'] ); ?> /> <strong><?php esc_html_e( 'Pageviews', 'pressed-hog-analytics-for-posthog' ); ?></strong> — <?php esc_html_e( 'send a $pageview event on every page load.', 'pressed-hog-analytics-for-posthog' ); ?></label>
+					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-autocapture" <?php checked( $options['autocapture'] ); ?> /> <strong><?php esc_html_e( 'Autocapture', 'pressed-hog-analytics-for-posthog' ); ?></strong> — <?php esc_html_e( 'clicks, form submissions, and other interactions.', 'pressed-hog-analytics-for-posthog' ); ?></label>
+					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-recording" <?php checked( $options['session_recording'] ); ?> /> <strong><?php esc_html_e( 'Session replay', 'pressed-hog-analytics-for-posthog' ); ?></strong> — <?php esc_html_e( 'record visitor sessions (also needs to be enabled in PostHog).', 'pressed-hog-analytics-for-posthog' ); ?></label>
+					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-surveys" <?php checked( $options['enable_surveys'] ); ?> /> <strong><?php esc_html_e( 'Surveys', 'pressed-hog-analytics-for-posthog' ); ?></strong> — <?php esc_html_e( 'allow PostHog popover surveys on your site.', 'pressed-hog-analytics-for-posthog' ); ?></label>
+					<label class="pressed-hog-toggle"><input type="checkbox" id="phw-identify" <?php checked( $options['identify_users'] ); ?> /> <strong><?php esc_html_e( 'Identify logged-in users', 'pressed-hog-analytics-for-posthog' ); ?></strong> — <?php esc_html_e( 'link events to WordPress accounts (sends user ID, email, and name — personal data).', 'pressed-hog-analytics-for-posthog' ); ?></label>
 
-					<p class="description"><?php esc_html_e( 'Administrators and editors are excluded from tracking by default. You can adjust roles later on the settings page.', 'pressed-hog' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Administrators and editors are excluded from tracking by default. You can adjust roles later on the settings page.', 'pressed-hog-analytics-for-posthog' ); ?></p>
 
 					<div class="pressed-hog-wizard__nav">
-						<button type="button" class="button" data-back><?php esc_html_e( 'Back', 'pressed-hog' ); ?></button>
-						<button type="button" class="button button-primary button-hero" data-next><?php esc_html_e( 'Continue', 'pressed-hog' ); ?></button>
+						<button type="button" class="button" data-back><?php esc_html_e( 'Back', 'pressed-hog-analytics-for-posthog' ); ?></button>
+						<button type="button" class="button button-primary button-hero" data-next><?php esc_html_e( 'Continue', 'pressed-hog-analytics-for-posthog' ); ?></button>
 					</div>
 				</section>
 
 				<!-- Step 3: Consent -->
 				<section class="pressed-hog-wizard__step" data-step="3">
-					<h2><?php esc_html_e( 'Cookie consent', 'pressed-hog' ); ?></h2>
-					<p><?php esc_html_e( 'How should tracking behave for new visitors?', 'pressed-hog' ); ?></p>
+					<h2><?php esc_html_e( 'Cookie consent', 'pressed-hog-analytics-for-posthog' ); ?></h2>
+					<p><?php esc_html_e( 'How should tracking behave for new visitors?', 'pressed-hog-analytics-for-posthog' ); ?></p>
 
-					<label class="pressed-hog-choice"><input type="radio" name="phw-consent" value="none" <?php checked( $options['consent_mode'], 'none' ); ?> /> <strong><?php esc_html_e( 'Track immediately', 'pressed-hog' ); ?></strong><span><?php esc_html_e( 'No consent gate. Fine if your audience or configuration does not require one.', 'pressed-hog' ); ?></span></label>
-					<label class="pressed-hog-choice"><input type="radio" name="phw-consent" value="banner" <?php checked( $options['consent_mode'], 'banner' ); ?> /> <strong><?php esc_html_e( 'Built-in cookie banner', 'pressed-hog' ); ?></strong><span><?php esc_html_e( 'Show a small accept/decline banner. Nothing is tracked until the visitor accepts.', 'pressed-hog' ); ?></span></label>
-					<label class="pressed-hog-choice"><input type="radio" name="phw-consent" value="external" <?php checked( $options['consent_mode'], 'external' ); ?> /> <strong><?php esc_html_e( 'I already use a consent plugin', 'pressed-hog' ); ?></strong><span><?php esc_html_e( 'Hold tracking until your consent plugin sets a cookie or calls the JavaScript API.', 'pressed-hog' ); ?></span></label>
+					<label class="pressed-hog-choice"><input type="radio" name="phw-consent" value="none" <?php checked( $options['consent_mode'], 'none' ); ?> /> <strong><?php esc_html_e( 'Track immediately', 'pressed-hog-analytics-for-posthog' ); ?></strong><span><?php esc_html_e( 'No consent gate. Fine if your audience or configuration does not require one.', 'pressed-hog-analytics-for-posthog' ); ?></span></label>
+					<label class="pressed-hog-choice"><input type="radio" name="phw-consent" value="banner" <?php checked( $options['consent_mode'], 'banner' ); ?> /> <strong><?php esc_html_e( 'Built-in cookie banner', 'pressed-hog-analytics-for-posthog' ); ?></strong><span><?php esc_html_e( 'Show a small accept/decline banner. Nothing is tracked until the visitor accepts.', 'pressed-hog-analytics-for-posthog' ); ?></span></label>
+					<label class="pressed-hog-choice"><input type="radio" name="phw-consent" value="external" <?php checked( $options['consent_mode'], 'external' ); ?> /> <strong><?php esc_html_e( 'I already use a consent plugin', 'pressed-hog-analytics-for-posthog' ); ?></strong><span><?php esc_html_e( 'Hold tracking until your consent plugin sets a cookie or calls the JavaScript API.', 'pressed-hog-analytics-for-posthog' ); ?></span></label>
 
 					<div id="phw-banner-fields" hidden>
 						<label class="pressed-hog-field">
-							<span><?php esc_html_e( 'Banner text', 'pressed-hog' ); ?></span>
+							<span><?php esc_html_e( 'Banner text', 'pressed-hog-analytics-for-posthog' ); ?></span>
 							<textarea id="phw-banner-text" rows="2" class="large-text"><?php echo esc_textarea( $options['banner_text'] ); ?></textarea>
 						</label>
 						<label class="pressed-hog-field pressed-hog-field--inline">
-							<span><?php esc_html_e( 'Buttons', 'pressed-hog' ); ?></span>
+							<span><?php esc_html_e( 'Buttons', 'pressed-hog-analytics-for-posthog' ); ?></span>
 							<input type="text" id="phw-banner-accept" value="<?php echo esc_attr( $options['banner_accept'] ); ?>" />
 							<input type="text" id="phw-banner-decline" value="<?php echo esc_attr( $options['banner_decline'] ); ?>" />
 						</label>
@@ -239,36 +248,36 @@ class Pressed_Hog_Wizard {
 
 					<div id="phw-external-fields" hidden>
 						<label class="pressed-hog-field pressed-hog-field--inline">
-							<span><?php esc_html_e( 'Consent cookie', 'pressed-hog' ); ?></span>
+							<span><?php esc_html_e( 'Consent cookie', 'pressed-hog-analytics-for-posthog' ); ?></span>
 							<input type="text" id="phw-cookie-name" class="code" value="<?php echo esc_attr( $options['consent_cookie_name'] ); ?>" />
 							=
 							<input type="text" id="phw-cookie-value" class="code" value="<?php echo esc_attr( $options['consent_cookie_value'] ); ?>" />
 						</label>
-						<p class="description"><?php esc_html_e( 'Tracking starts when this cookie equals this value, or when your plugin calls window.pressedHog.grantConsent().', 'pressed-hog' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Tracking starts when this cookie equals this value, or when your plugin calls window.pressedHog.grantConsent().', 'pressed-hog-analytics-for-posthog' ); ?></p>
 					</div>
 
 					<div class="pressed-hog-wizard__status" id="phw-save-status" role="status"></div>
 
 					<div class="pressed-hog-wizard__nav">
-						<button type="button" class="button" data-back><?php esc_html_e( 'Back', 'pressed-hog' ); ?></button>
-						<button type="button" class="button button-primary button-hero" id="phw-finish"><?php esc_html_e( 'Save & finish', 'pressed-hog' ); ?></button>
+						<button type="button" class="button" data-back><?php esc_html_e( 'Back', 'pressed-hog-analytics-for-posthog' ); ?></button>
+						<button type="button" class="button button-primary button-hero" id="phw-finish"><?php esc_html_e( 'Save & finish', 'pressed-hog-analytics-for-posthog' ); ?></button>
 					</div>
 				</section>
 
 				<!-- Step 4: Done -->
 				<section class="pressed-hog-wizard__step" data-step="4">
-					<h2><?php esc_html_e( 'You’re all set 🦔', 'pressed-hog' ); ?></h2>
-					<p><?php esc_html_e( 'Settings saved. PostHog is now live on your site for visitors who match your tracking and consent rules.', 'pressed-hog' ); ?></p>
+					<h2><?php esc_html_e( 'You’re all set 🦔', 'pressed-hog-analytics-for-posthog' ); ?></h2>
+					<p><?php esc_html_e( 'Settings saved. PostHog is now live on your site for visitors who match your tracking and consent rules.', 'pressed-hog-analytics-for-posthog' ); ?></p>
 
 					<p>
-						<button type="button" class="button button-primary" id="phw-test-event"><?php esc_html_e( 'Send a test event', 'pressed-hog' ); ?></button>
+						<button type="button" class="button button-primary" id="phw-test-event"><?php esc_html_e( 'Send a test event', 'pressed-hog-analytics-for-posthog' ); ?></button>
 					</p>
 					<div class="pressed-hog-wizard__status" id="phw-test-status" role="status"></div>
 
 					<div class="pressed-hog-wizard__done-links">
-						<a class="button" id="phw-open-posthog" href="https://us.posthog.com" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open PostHog ↗', 'pressed-hog' ); ?></a>
-						<a class="button" href="<?php echo esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ); ?>"><?php esc_html_e( 'All settings', 'pressed-hog' ); ?></a>
-						<a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Visit your site', 'pressed-hog' ); ?></a>
+						<a class="button" id="phw-open-posthog" href="https://us.posthog.com" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open PostHog ↗', 'pressed-hog-analytics-for-posthog' ); ?></a>
+						<a class="button" href="<?php echo esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ); ?>"><?php esc_html_e( 'All settings', 'pressed-hog-analytics-for-posthog' ); ?></a>
+						<a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Visit your site', 'pressed-hog-analytics-for-posthog' ); ?></a>
 					</div>
 				</section>
 			</div>
@@ -312,8 +321,10 @@ class Pressed_Hog_Wizard {
 	public static function ajax_validate_key() {
 		self::check_ajax_request();
 
-		$host = self::sanitize_remote_host( wp_unslash( $_POST['host'] ?? '' ) );
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- nonce verified in check_ajax_request().
+		$host = self::sanitize_remote_host( esc_url_raw( wp_unslash( $_POST['host'] ?? '' ) ) );
 		$key  = sanitize_text_field( wp_unslash( $_POST['api_key'] ?? '' ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( '' === $key ) {
 			wp_send_json_error( array( 'code' => 'missing' ) );
@@ -365,7 +376,7 @@ class Pressed_Hog_Wizard {
 	public static function ajax_save_wizard() {
 		self::check_ajax_request();
 
-		$raw = json_decode( wp_unslash( $_POST['settings'] ?? '' ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized field-by-field below.
+		$raw = json_decode( wp_unslash( $_POST['settings'] ?? '' ), true ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified in check_ajax_request(); JSON sanitized field-by-field below.
 		if ( ! is_array( $raw ) ) {
 			wp_send_json_error( array( 'code' => 'bad_payload' ) );
 		}
@@ -412,7 +423,7 @@ class Pressed_Hog_Wizard {
 			wp_send_json_error( array( 'code' => 'missing_key' ) );
 		}
 
-		$auth = wp_remote_post(
+		$auth = wp_safe_remote_post(
 			$options['api_host'] . '/decide/?v=3',
 			array(
 				'timeout' => 8,
@@ -429,7 +440,7 @@ class Pressed_Hog_Wizard {
 			wp_send_json_error( array( 'code' => 'rejected' ) );
 		}
 
-		$response = wp_remote_post(
+		$response = wp_safe_remote_post(
 			$options['api_host'] . '/capture/',
 			array(
 				'timeout' => 8,

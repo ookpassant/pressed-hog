@@ -42,11 +42,14 @@ class Pressed_Hog_Links {
 		add_action( 'admin_post_' . self::ACTION_EXPORT, array( __CLASS__, 'handle_export' ) );
 	}
 
+	/** Hook suffix of the QR Codes page, set when the menu is registered. */
+	private static $hook_suffix = '';
+
 	public static function add_menu() {
-		add_submenu_page(
+		self::$hook_suffix = (string) add_submenu_page(
 			'pressed-hog-analytics',
-			__( 'QR Codes & Trackable Links', 'pressed-hog' ),
-			__( 'QR Codes', 'pressed-hog' ),
+			__( 'QR Codes & Trackable Links', 'pressed-hog-analytics-for-posthog' ),
+			__( 'QR Codes', 'pressed-hog-analytics-for-posthog' ),
 			'manage_options',
 			'pressed-hog-links',
 			array( __CLASS__, 'render_page' )
@@ -54,7 +57,7 @@ class Pressed_Hog_Links {
 	}
 
 	public static function enqueue( $hook ) {
-		if ( 'posthog_page_pressed-hog-links' !== $hook ) {
+		if ( '' === self::$hook_suffix || self::$hook_suffix !== $hook ) {
 			return;
 		}
 		wp_enqueue_style( 'pressed-hog-links', PRESSED_HOG_URL . 'assets/css/links.css', array(), PRESSED_HOG_VERSION );
@@ -65,10 +68,10 @@ class Pressed_Hog_Links {
 			array(
 				'trackParam' => self::TRACK_PARAM,
 				'i18n'       => array(
-					'copied'       => __( 'Copied!', 'pressed-hog' ),
-					'copy'         => __( 'Copy', 'pressed-hog' ),
-					'invalidUrl'   => __( 'Enter a valid http(s) URL to preview a QR code.', 'pressed-hog' ),
-					'downloadName' => __( 'qr-code', 'pressed-hog' ),
+					'copied'       => __( 'Copied!', 'pressed-hog-analytics-for-posthog' ),
+					'copy'         => __( 'Copy', 'pressed-hog-analytics-for-posthog' ),
+					'invalidUrl'   => __( 'Enter a valid http(s) URL to preview a QR code.', 'pressed-hog-analytics-for-posthog' ),
+					'downloadName' => __( 'qr-code', 'pressed-hog-analytics-for-posthog' ),
 				),
 			)
 		);
@@ -144,13 +147,12 @@ class Pressed_Hog_Links {
 
 	public static function handle_save() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do this.', 'pressed-hog' ) );
+			wp_die( esc_html__( 'You do not have permission to do this.', 'pressed-hog-analytics-for-posthog' ) );
 		}
 		check_admin_referer( self::ACTION_SAVE );
 
-		$raw_destination = isset( $_POST['destination'] ) ? wp_unslash( $_POST['destination'] ) : '';
-		$destination     = esc_url_raw( trim( $raw_destination ) );
-		$scheme          = wp_parse_url( $destination, PHP_URL_SCHEME );
+		$destination = isset( $_POST['destination'] ) ? esc_url_raw( wp_unslash( $_POST['destination'] ) ) : '';
+		$scheme      = wp_parse_url( $destination, PHP_URL_SCHEME );
 
 		if ( ! $destination || ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
 			self::redirect_back( array( 'phg_notice' => 'invalid' ) );
@@ -193,7 +195,7 @@ class Pressed_Hog_Links {
 
 	public static function handle_delete() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do this.', 'pressed-hog' ) );
+			wp_die( esc_html__( 'You do not have permission to do this.', 'pressed-hog-analytics-for-posthog' ) );
 		}
 		$id = isset( $_GET['id'] ) ? sanitize_text_field( wp_unslash( $_GET['id'] ) ) : '';
 		check_admin_referer( self::ACTION_DELETE . '_' . $id );
@@ -210,7 +212,7 @@ class Pressed_Hog_Links {
 
 	public static function handle_export() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do this.', 'pressed-hog' ) );
+			wp_die( esc_html__( 'You do not have permission to do this.', 'pressed-hog-analytics-for-posthog' ) );
 		}
 		check_admin_referer( self::ACTION_EXPORT );
 
@@ -221,20 +223,20 @@ class Pressed_Hog_Links {
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename=' . $filename );
 
-		$out = fopen( 'php://output', 'w' );
 		// UTF-8 BOM so Excel opens accented characters correctly.
-		fwrite( $out, "\xEF\xBB\xBF" );
+		echo "\xEF\xBB\xBF"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal byte-order mark in a CSV download.
+		$out = fopen( 'php://output', 'w' );
 		fputcsv(
 			$out,
 			array(
-				__( 'Label', 'pressed-hog' ),
-				__( 'Destination', 'pressed-hog' ),
-				__( 'Tracked URL', 'pressed-hog' ),
-				__( 'Source', 'pressed-hog' ),
-				__( 'Medium', 'pressed-hog' ),
-				__( 'Campaign', 'pressed-hog' ),
-				__( 'Tracking ID', 'pressed-hog' ),
-				__( 'Created', 'pressed-hog' ),
+				__( 'Label', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Destination', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Tracked URL', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Source', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Medium', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Campaign', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Tracking ID', 'pressed-hog-analytics-for-posthog' ),
+				__( 'Created', 'pressed-hog-analytics-for-posthog' ),
 			)
 		);
 		foreach ( $links as $link ) {
@@ -252,7 +254,6 @@ class Pressed_Hog_Links {
 				)
 			);
 		}
-		fclose( $out );
 		exit;
 	}
 
@@ -272,18 +273,18 @@ class Pressed_Hog_Links {
 		$options = pressed_hog_get_options();
 
 		echo '<div class="wrap pressed-hog-links">';
-		printf( '<h1>%s</h1>', esc_html__( 'QR Codes & Trackable Links', 'pressed-hog' ) );
+		printf( '<h1>%s</h1>', esc_html__( 'QR Codes & Trackable Links', 'pressed-hog-analytics-for-posthog' ) );
 		printf(
 			'<p class="ph-links-intro">%s</p>',
-			esc_html__( 'Turn any URL into a campaign-tagged link with its own QR code. Each link carries UTM parameters and a unique tracking id, so scans show up as attributable traffic in PostHog. Your links are saved below and can be exported as a spreadsheet.', 'pressed-hog' )
+			esc_html__( 'Turn any URL into a campaign-tagged link with its own QR code. Each link carries UTM parameters and a unique tracking id, so scans show up as attributable traffic in PostHog. Your links are saved below and can be exported as a spreadsheet.', 'pressed-hog-analytics-for-posthog' )
 		);
 
 		if ( empty( $options['api_key'] ) ) {
 			printf(
 				'<div class="notice notice-info inline"><p>%s <a href="%s">%s</a></p></div>',
-				esc_html__( 'PostHog isn’t connected yet, so scans won’t be recorded. QR codes still work — connect your project to start attributing them.', 'pressed-hog' ),
+				esc_html__( 'PostHog isn’t connected yet, so scans won’t be recorded. QR codes still work — connect your project to start attributing them.', 'pressed-hog-analytics-for-posthog' ),
 				esc_url( Pressed_Hog_Wizard::url() ),
-				esc_html__( 'Run the setup wizard', 'pressed-hog' )
+				esc_html__( 'Run the setup wizard', 'pressed-hog-analytics-for-posthog' )
 			);
 		}
 
@@ -300,9 +301,9 @@ class Pressed_Hog_Links {
 			return;
 		}
 		$messages = array(
-			'created' => array( 'success', __( 'Trackable link created.', 'pressed-hog' ) ),
-			'deleted' => array( 'success', __( 'Link deleted.', 'pressed-hog' ) ),
-			'invalid' => array( 'error', __( 'That doesn’t look like a valid http(s) URL. Nothing was saved.', 'pressed-hog' ) ),
+			'created' => array( 'success', __( 'Trackable link created.', 'pressed-hog-analytics-for-posthog' ) ),
+			'deleted' => array( 'success', __( 'Link deleted.', 'pressed-hog-analytics-for-posthog' ) ),
+			'invalid' => array( 'error', __( 'That doesn’t look like a valid http(s) URL. Nothing was saved.', 'pressed-hog-analytics-for-posthog' ) ),
 		);
 		if ( ! isset( $messages[ $notice ] ) ) {
 			return;
@@ -316,7 +317,7 @@ class Pressed_Hog_Links {
 
 	private static function render_create_form() {
 		echo '<div class="ph-card ph-links-create">';
-		printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Create a trackable link', 'pressed-hog' ) );
+		printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Create a trackable link', 'pressed-hog-analytics-for-posthog' ) );
 		echo '<div class="ph-links-create__grid">';
 
 		// Left: the form.
@@ -326,43 +327,43 @@ class Pressed_Hog_Links {
 
 		self::field(
 			'destination',
-			__( 'Destination URL', 'pressed-hog' ),
+			__( 'Destination URL', 'pressed-hog-analytics-for-posthog' ),
 			'url',
 			'https://example.com/landing-page',
-			__( 'Where the QR code sends people — your own link.', 'pressed-hog' ),
+			__( 'Where the QR code sends people — your own link.', 'pressed-hog-analytics-for-posthog' ),
 			true
 		);
 		self::field(
 			'label',
-			__( 'Label (optional)', 'pressed-hog' ),
+			__( 'Label (optional)', 'pressed-hog-analytics-for-posthog' ),
 			'text',
-			__( 'Spring flyer', 'pressed-hog' ),
-			__( 'A name to recognise this link by in the list below.', 'pressed-hog' )
+			__( 'Spring flyer', 'pressed-hog-analytics-for-posthog' ),
+			__( 'A name to recognise this link by in the list below.', 'pressed-hog-analytics-for-posthog' )
 		);
 
 		echo '<div class="ph-links-form__row">';
-		self::field( 'source', __( 'Campaign source', 'pressed-hog' ), 'text', 'qr', '', false, 'qr' );
-		self::field( 'medium', __( 'Campaign medium', 'pressed-hog' ), 'text', 'qr-code', '', false, 'qr-code' );
+		self::field( 'source', __( 'Campaign source', 'pressed-hog-analytics-for-posthog' ), 'text', 'qr', '', false, 'qr' );
+		self::field( 'medium', __( 'Campaign medium', 'pressed-hog-analytics-for-posthog' ), 'text', 'qr-code', '', false, 'qr-code' );
 		echo '</div>';
 
 		self::field(
 			'campaign',
-			__( 'Campaign name (optional)', 'pressed-hog' ),
+			__( 'Campaign name (optional)', 'pressed-hog-analytics-for-posthog' ),
 			'text',
-			__( 'spring-sale', 'pressed-hog' ),
-			__( 'Groups scans under a campaign in PostHog (utm_campaign).', 'pressed-hog' )
+			__( 'spring-sale', 'pressed-hog-analytics-for-posthog' ),
+			__( 'Groups scans under a campaign in PostHog (utm_campaign).', 'pressed-hog-analytics-for-posthog' )
 		);
 
 		printf(
 			'<p class="submit"><button type="submit" class="button button-primary">%s</button></p>',
-			esc_html__( 'Save link', 'pressed-hog' )
+			esc_html__( 'Save link', 'pressed-hog-analytics-for-posthog' )
 		);
 		echo '</form>';
 
 		// Right: live QR preview.
 		echo '<div class="ph-links-preview">';
-		printf( '<span class="ph-links-preview__label">%s</span>', esc_html__( 'Live preview', 'pressed-hog' ) );
-		echo '<div class="ph-qr" id="ph-links-preview-qr" data-empty-text="' . esc_attr__( 'Enter a valid http(s) URL to preview a QR code.', 'pressed-hog' ) . '"></div>';
+		printf( '<span class="ph-links-preview__label">%s</span>', esc_html__( 'Live preview', 'pressed-hog-analytics-for-posthog' ) );
+		echo '<div class="ph-qr" id="ph-links-preview-qr" data-empty-text="' . esc_attr__( 'Enter a valid http(s) URL to preview a QR code.', 'pressed-hog-analytics-for-posthog' ) . '"></div>';
 		echo '<code class="ph-links-preview__url" id="ph-links-preview-url"></code>';
 		echo '</div>';
 
@@ -388,7 +389,7 @@ class Pressed_Hog_Links {
 	private static function render_links_table( $links ) {
 		echo '<div class="ph-card">';
 		echo '<div class="ph-links-table-head">';
-		printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Your links', 'pressed-hog' ) );
+		printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Your links', 'pressed-hog-analytics-for-posthog' ) );
 		if ( ! empty( $links ) ) {
 			$export_url = wp_nonce_url(
 				admin_url( 'admin-post.php?action=' . self::ACTION_EXPORT ),
@@ -397,22 +398,22 @@ class Pressed_Hog_Links {
 			printf(
 				'<a href="%s" class="button">%s</a>',
 				esc_url( $export_url ),
-				esc_html__( 'Download sheet (CSV)', 'pressed-hog' )
+				esc_html__( 'Download sheet (CSV)', 'pressed-hog-analytics-for-posthog' )
 			);
 		}
 		echo '</div>';
 
 		if ( empty( $links ) ) {
-			printf( '<p class="ph-empty">%s</p>', esc_html__( 'No links yet. Create your first trackable link above.', 'pressed-hog' ) );
+			printf( '<p class="ph-empty">%s</p>', esc_html__( 'No links yet. Create your first trackable link above.', 'pressed-hog-analytics-for-posthog' ) );
 			echo '</div>';
 			return;
 		}
 
 		echo '<table class="widefat striped ph-links-table"><thead><tr>';
-		printf( '<th>%s</th>', esc_html__( 'Label', 'pressed-hog' ) );
-		printf( '<th>%s</th>', esc_html__( 'Tracked URL', 'pressed-hog' ) );
-		printf( '<th>%s</th>', esc_html__( 'Created', 'pressed-hog' ) );
-		printf( '<th class="ph-links-table__actions">%s</th>', esc_html__( 'Actions', 'pressed-hog' ) );
+		printf( '<th>%s</th>', esc_html__( 'Label', 'pressed-hog-analytics-for-posthog' ) );
+		printf( '<th>%s</th>', esc_html__( 'Tracked URL', 'pressed-hog-analytics-for-posthog' ) );
+		printf( '<th>%s</th>', esc_html__( 'Created', 'pressed-hog-analytics-for-posthog' ) );
+		printf( '<th class="ph-links-table__actions">%s</th>', esc_html__( 'Actions', 'pressed-hog-analytics-for-posthog' ) );
 		echo '</tr></thead><tbody>';
 
 		foreach ( $links as $link ) {
@@ -432,7 +433,7 @@ class Pressed_Hog_Links {
 				'<td><a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a> <button type="button" class="button-link ph-copy" data-copy="%1$s">%3$s</button></td>',
 				esc_url( $tracked_url ),
 				esc_html( $tracked_url ),
-				esc_html__( 'Copy', 'pressed-hog' )
+				esc_html__( 'Copy', 'pressed-hog-analytics-for-posthog' )
 			);
 			printf(
 				'<td>%s</td>',
@@ -443,13 +444,13 @@ class Pressed_Hog_Links {
 				'<button type="button" class="button ph-qr-show" data-url="%s" data-label="%s">%s</button> ',
 				esc_attr( $tracked_url ),
 				esc_attr( $link['label'] ?? 'qr-code' ),
-				esc_html__( 'QR code', 'pressed-hog' )
+				esc_html__( 'QR code', 'pressed-hog-analytics-for-posthog' )
 			);
 			printf(
-				'<a href="%s" class="button-link ph-links-table__delete" onclick="return confirm(%s);">%s</a>',
+				'<a href="%s" class="button-link ph-links-table__delete" data-confirm="%s">%s</a>',
 				esc_url( $delete_url ),
-				esc_attr( wp_json_encode( __( 'Delete this link?', 'pressed-hog' ) ) ),
-				esc_html__( 'Delete', 'pressed-hog' )
+				esc_attr__( 'Delete this link?', 'pressed-hog-analytics-for-posthog' ),
+				esc_html__( 'Delete', 'pressed-hog-analytics-for-posthog' )
 			);
 			echo '</td></tr>';
 		}
@@ -460,13 +461,13 @@ class Pressed_Hog_Links {
 		<div class="ph-qr-modal" id="ph-qr-modal" hidden>
 			<div class="ph-qr-modal__backdrop" data-close="1"></div>
 			<div class="ph-qr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="ph-qr-modal-title">
-				<button type="button" class="ph-qr-modal__close" data-close="1" aria-label="<?php esc_attr_e( 'Close', 'pressed-hog' ); ?>">&times;</button>
+				<button type="button" class="ph-qr-modal__close" data-close="1" aria-label="<?php esc_attr_e( 'Close', 'pressed-hog-analytics-for-posthog' ); ?>">&times;</button>
 				<h2 id="ph-qr-modal-title" class="ph-qr-modal__title"></h2>
 				<div class="ph-qr" id="ph-qr-modal-canvas"></div>
 				<code class="ph-qr-modal__url"></code>
 				<p class="ph-qr-modal__actions">
-					<button type="button" class="button button-primary" data-download="png"><?php esc_html_e( 'Download PNG', 'pressed-hog' ); ?></button>
-					<button type="button" class="button" data-download="svg"><?php esc_html_e( 'Download SVG', 'pressed-hog' ); ?></button>
+					<button type="button" class="button button-primary" data-download="png"><?php esc_html_e( 'Download PNG', 'pressed-hog-analytics-for-posthog' ); ?></button>
+					<button type="button" class="button" data-download="svg"><?php esc_html_e( 'Download SVG', 'pressed-hog-analytics-for-posthog' ); ?></button>
 				</p>
 			</div>
 		</div>

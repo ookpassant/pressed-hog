@@ -30,17 +30,23 @@ class Pressed_Hog_Analytics {
 
 	public static function add_menu() {
 		add_menu_page(
-			__( 'PostHog Analytics', 'pressed-hog' ),
-			__( 'PostHog', 'pressed-hog' ),
+			__( 'Pressed Hog Analytics', 'pressed-hog-analytics-for-posthog' ),
+			__( 'Pressed Hog', 'pressed-hog-analytics-for-posthog' ),
 			'manage_options',
 			'pressed-hog-analytics',
 			array( __CLASS__, 'render_page' ),
-			'dashicons-chart-area',
-			3
+			'dashicons-chart-area'
 		);
 	}
 
 	public static function enqueue( $hook ) {
+		if ( 'index.php' === $hook && current_user_can( 'manage_options' ) ) {
+			// Minimal styling for the dashboard widget, so it doesn't need the full stylesheet.
+			wp_register_style( 'pressed-hog-widget', false, array(), PRESSED_HOG_VERSION );
+			wp_enqueue_style( 'pressed-hog-widget' );
+			wp_add_inline_style( 'pressed-hog-widget', '.ph-widget-tiles{display:flex;gap:24px;margin:4px 0 8px}.ph-widget-tile__value{display:block;font-size:22px;font-weight:600;line-height:1.2}.ph-widget-tile__label{display:block;color:#646970}.ph-delta--up{color:#006300}.ph-delta--down{color:#d03b3b}.ph-delta--none{color:#898781}' );
+			return;
+		}
 		if ( 'toplevel_page_pressed-hog-analytics' !== $hook ) {
 			return;
 		}
@@ -178,6 +184,20 @@ class Pressed_Hog_Analytics {
 	 * Admin page
 	 * ------------------------------------------------------------------- */
 
+	/**
+	 * Markup allowed in a delta badge, for escaping it with wp_kses() on output.
+	 *
+	 * @return array
+	 */
+	private static function delta_allowed_html() {
+		return array(
+			'span' => array(
+				'class'       => true,
+				'aria-hidden' => true,
+			),
+		);
+	}
+
 	private static function render_delta( $current, $previous ) {
 		if ( $previous <= 0 ) {
 			return '<span class="ph-delta ph-delta--none">—</span>';
@@ -192,7 +212,7 @@ class Pressed_Hog_Analytics {
 			$up ? 'ph-delta--up' : 'ph-delta--down',
 			$up ? '▲' : '▼',
 			esc_html( abs( $pct ) ),
-			$up ? esc_html__( 'up vs previous period', 'pressed-hog' ) : esc_html__( 'down vs previous period', 'pressed-hog' )
+			$up ? esc_html__( 'up vs previous period', 'pressed-hog-analytics-for-posthog' ) : esc_html__( 'down vs previous period', 'pressed-hog-analytics-for-posthog' )
 		);
 	}
 
@@ -207,9 +227,9 @@ class Pressed_Hog_Analytics {
 		echo '<div class="wrap pressed-hog-analytics">';
 		printf(
 			'<h1>%s <a class="page-title-action" href="%s" target="_blank" rel="noopener noreferrer">%s</a></h1>',
-			esc_html__( 'PostHog Analytics', 'pressed-hog' ),
+			esc_html__( 'Pressed Hog Analytics', 'pressed-hog-analytics-for-posthog' ),
 			esc_url( $app_host ),
-			esc_html__( 'Open PostHog ↗', 'pressed-hog' )
+			esc_html__( 'Open PostHog ↗', 'pressed-hog-analytics-for-posthog' )
 		);
 
 		if ( ! self::is_configured() ) {
@@ -227,9 +247,9 @@ class Pressed_Hog_Analytics {
 		if ( is_wp_error( $stats ) ) {
 			printf(
 				'<div class="notice notice-error"><p>%s <code>%s</code></p><p>%s</p></div></div>',
-				esc_html__( 'Could not fetch data from PostHog:', 'pressed-hog' ),
+				esc_html__( 'Could not fetch data from PostHog:', 'pressed-hog-analytics-for-posthog' ),
 				esc_html( $stats->get_error_message() ),
-				esc_html__( 'Check the personal API key and project ID on the Pressed Hog settings page, and that the key has Query read access.', 'pressed-hog' )
+				esc_html__( 'Check the personal API key and project ID on the Pressed Hog settings page, and that the key has Query read access.', 'pressed-hog-analytics-for-posthog' )
 			);
 			return;
 		}
@@ -242,7 +262,7 @@ class Pressed_Hog_Analytics {
 				esc_url( add_query_arg( 'range', $option_range, admin_url( 'admin.php?page=pressed-hog-analytics' ) ) ),
 				$option_range === $range ? 'current' : '',
 				/* translators: %d: number of days. */
-				esc_html( sprintf( __( 'Last %d days', 'pressed-hog' ), $option_range ) )
+				esc_html( sprintf( __( 'Last %d days', 'pressed-hog-analytics-for-posthog' ), $option_range ) )
 			);
 		}
 		echo '</ul><div class="clear"></div>';
@@ -253,19 +273,19 @@ class Pressed_Hog_Analytics {
 		echo '<div class="ph-tiles">';
 		printf(
 			'<div class="ph-tile"><span class="ph-tile__label">%s</span><span class="ph-tile__value">%s</span>%s</div>',
-			esc_html__( 'Pageviews', 'pressed-hog' ),
+			esc_html__( 'Pageviews', 'pressed-hog-analytics-for-posthog' ),
 			esc_html( number_format_i18n( $summary['pageviews'] ) ),
-			self::render_delta( $summary['pageviews'], $summary['prev_pageviews'] ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts.
+			wp_kses( self::render_delta( $summary['pageviews'], $summary['prev_pageviews'] ), self::delta_allowed_html() )
 		);
 		printf(
 			'<div class="ph-tile"><span class="ph-tile__label">%s</span><span class="ph-tile__value">%s</span>%s</div>',
-			esc_html__( 'Unique visitors', 'pressed-hog' ),
+			esc_html__( 'Unique visitors', 'pressed-hog-analytics-for-posthog' ),
 			esc_html( number_format_i18n( $summary['visitors'] ) ),
-			self::render_delta( $summary['visitors'], $summary['prev_visitors'] ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts.
+			wp_kses( self::render_delta( $summary['visitors'], $summary['prev_visitors'] ), self::delta_allowed_html() )
 		);
 		printf(
 			'<div class="ph-tile"><span class="ph-tile__label">%s</span><span class="ph-tile__value">%s</span></div>',
-			esc_html__( 'Views per visitor', 'pressed-hog' ),
+			esc_html__( 'Views per visitor', 'pressed-hog-analytics-for-posthog' ),
 			esc_html( $summary['visitors'] > 0 ? number_format_i18n( $summary['pageviews'] / $summary['visitors'], 1 ) : '—' )
 		);
 		echo '</div>';
@@ -280,26 +300,23 @@ class Pressed_Hog_Analytics {
 			);
 		}
 		echo '<div class="ph-card">';
-		printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Traffic over time', 'pressed-hog' ) );
+		printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Traffic over time', 'pressed-hog-analytics-for-posthog' ) );
 		echo '<div class="ph-legend">';
-		printf( '<span class="ph-legend__item"><span class="ph-chip ph-chip--pageviews" aria-hidden="true"></span>%s</span>', esc_html__( 'Pageviews', 'pressed-hog' ) );
-		printf( '<span class="ph-legend__item"><span class="ph-chip ph-chip--visitors" aria-hidden="true"></span>%s</span>', esc_html__( 'Unique visitors', 'pressed-hog' ) );
+		printf( '<span class="ph-legend__item"><span class="ph-chip ph-chip--pageviews" aria-hidden="true"></span>%s</span>', esc_html__( 'Pageviews', 'pressed-hog-analytics-for-posthog' ) );
+		printf( '<span class="ph-legend__item"><span class="ph-chip ph-chip--visitors" aria-hidden="true"></span>%s</span>', esc_html__( 'Unique visitors', 'pressed-hog-analytics-for-posthog' ) );
 		echo '</div>';
 		printf(
-			'<script type="application/json" id="pressed-hog-chart-data">%s</script>',
-			wp_json_encode( $series_data ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON in a non-executed script block.
-		);
-		printf(
-			'<div id="pressed-hog-chart" data-empty-text="%s"></div>',
-			esc_attr__( 'No pageview data for this period yet.', 'pressed-hog' )
+			'<div id="pressed-hog-chart" data-series="%s" data-empty-text="%s"></div>',
+			esc_attr( wp_json_encode( $series_data ) ),
+			esc_attr__( 'No pageview data for this period yet.', 'pressed-hog-analytics-for-posthog' )
 		);
 		// Table view of the chart data (accessibility fallback).
-		printf( '<details class="ph-table-view"><summary>%s</summary>', esc_html__( 'View data as table', 'pressed-hog' ) );
+		printf( '<details class="ph-table-view"><summary>%s</summary>', esc_html__( 'View data as table', 'pressed-hog-analytics-for-posthog' ) );
 		printf(
 			'<table class="widefat striped"><thead><tr><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>',
-			esc_html__( 'Day', 'pressed-hog' ),
-			esc_html__( 'Pageviews', 'pressed-hog' ),
-			esc_html__( 'Unique visitors', 'pressed-hog' )
+			esc_html__( 'Day', 'pressed-hog-analytics-for-posthog' ),
+			esc_html__( 'Pageviews', 'pressed-hog-analytics-for-posthog' ),
+			esc_html__( 'Unique visitors', 'pressed-hog-analytics-for-posthog' )
 		);
 		foreach ( $series_data as $point ) {
 			printf(
@@ -314,31 +331,30 @@ class Pressed_Hog_Analytics {
 		// Breakdown tables.
 		echo '<div class="ph-columns">';
 		self::render_table(
-			__( 'Top pages', 'pressed-hog' ),
-			array( __( 'Path', 'pressed-hog' ), __( 'Views', 'pressed-hog' ), __( 'Visitors', 'pressed-hog' ) ),
+			__( 'Top pages', 'pressed-hog-analytics-for-posthog' ),
+			array( __( 'Path', 'pressed-hog-analytics-for-posthog' ), __( 'Views', 'pressed-hog-analytics-for-posthog' ), __( 'Visitors', 'pressed-hog-analytics-for-posthog' ) ),
 			$stats['pages']
 		);
 		self::render_table(
-			__( 'Top referrers', 'pressed-hog' ),
-			array( __( 'Domain', 'pressed-hog' ), __( 'Views', 'pressed-hog' ) ),
+			__( 'Top referrers', 'pressed-hog-analytics-for-posthog' ),
+			array( __( 'Domain', 'pressed-hog-analytics-for-posthog' ), __( 'Views', 'pressed-hog-analytics-for-posthog' ) ),
 			$stats['referrers']
 		);
 		self::render_table(
-			__( 'Devices', 'pressed-hog' ),
-			array( __( 'Device', 'pressed-hog' ), __( 'Visitors', 'pressed-hog' ) ),
+			__( 'Devices', 'pressed-hog-analytics-for-posthog' ),
+			array( __( 'Device', 'pressed-hog-analytics-for-posthog' ), __( 'Visitors', 'pressed-hog-analytics-for-posthog' ) ),
 			$stats['devices']
 		);
 		echo '</div>';
 
-		// Optional embedded shared dashboard.
+		// Optional shared dashboard: linked, not embedded, so nothing remote loads inside wp-admin.
 		if ( ! empty( $options['embed_url'] ) ) {
-			$embed = str_replace( '/shared/', '/embedded/', $options['embed_url'] );
 			echo '<div class="ph-card">';
-			printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Embedded PostHog dashboard', 'pressed-hog' ) );
+			printf( '<h2 class="ph-card__title">%s</h2>', esc_html__( 'Shared PostHog dashboard', 'pressed-hog-analytics-for-posthog' ) );
 			printf(
-				'<iframe class="ph-embed" src="%s" loading="lazy" title="%s"></iframe>',
-				esc_url( $embed ),
-				esc_attr__( 'PostHog dashboard', 'pressed-hog' )
+				'<p><a class="button" href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
+				esc_url( $options['embed_url'] ),
+				esc_html__( 'Open shared dashboard in PostHog ↗', 'pressed-hog-analytics-for-posthog' )
 			);
 			echo '</div>';
 		}
@@ -350,7 +366,7 @@ class Pressed_Hog_Analytics {
 		echo '<div class="ph-card">';
 		printf( '<h2 class="ph-card__title">%s</h2>', esc_html( $title ) );
 		if ( empty( $rows ) ) {
-			printf( '<p class="ph-empty">%s</p>', esc_html__( 'No data for this period.', 'pressed-hog' ) );
+			printf( '<p class="ph-empty">%s</p>', esc_html__( 'No data for this period.', 'pressed-hog-analytics-for-posthog' ) );
 			echo '</div>';
 			return;
 		}
@@ -378,27 +394,27 @@ class Pressed_Hog_Analytics {
 
 	private static function render_setup_prompt( $app_host ) {
 		echo '<div class="ph-card ph-card--setup">';
-		printf( '<h2>%s</h2>', esc_html__( 'Connect the dashboard to PostHog', 'pressed-hog' ) );
-		printf( '<p>%s</p>', esc_html__( 'The analytics page reads data via PostHog’s Query API, which needs two extra values (both on the Pressed Hog settings page):', 'pressed-hog' ) );
+		printf( '<h2>%s</h2>', esc_html__( 'Connect the dashboard to PostHog', 'pressed-hog-analytics-for-posthog' ) );
+		printf( '<p>%s</p>', esc_html__( 'The analytics page reads data via PostHog’s Query API, which needs two extra values (both on the Pressed Hog settings page):', 'pressed-hog-analytics-for-posthog' ) );
 		echo '<ol>';
 		printf(
 			'<li>%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a> %s</li>',
-			esc_html__( 'A personal API key — create one at', 'pressed-hog' ),
+			esc_html__( 'A personal API key — create one at', 'pressed-hog-analytics-for-posthog' ),
 			esc_url( $app_host . '/settings/user-api-keys' ),
-			esc_html__( 'PostHog → Settings → Personal API keys ↗', 'pressed-hog' ),
-			esc_html__( '(read-only "Query" scope is enough).', 'pressed-hog' )
+			esc_html__( 'PostHog → Settings → Personal API keys ↗', 'pressed-hog-analytics-for-posthog' ),
+			esc_html__( '(read-only "Query" scope is enough).', 'pressed-hog-analytics-for-posthog' )
 		);
 		printf(
 			'<li>%s <a href="%s" target="_blank" rel="noopener noreferrer">%s</a></li>',
-			esc_html__( 'Your numeric project ID — shown at', 'pressed-hog' ),
+			esc_html__( 'Your numeric project ID — shown at', 'pressed-hog-analytics-for-posthog' ),
 			esc_url( $app_host . '/settings/project' ),
-			esc_html__( 'PostHog → Settings → Project ↗', 'pressed-hog' )
+			esc_html__( 'PostHog → Settings → Project ↗', 'pressed-hog-analytics-for-posthog' )
 		);
 		echo '</ol>';
 		printf(
 			'<p><a class="button button-primary" href="%s">%s</a></p>',
 			esc_url( admin_url( 'options-general.php?page=pressed-hog' ) ),
-			esc_html__( 'Open Pressed Hog settings', 'pressed-hog' )
+			esc_html__( 'Open Pressed Hog settings', 'pressed-hog-analytics-for-posthog' )
 		);
 		echo '</div>';
 	}
@@ -413,7 +429,7 @@ class Pressed_Hog_Analytics {
 		}
 		wp_add_dashboard_widget(
 			'pressed_hog_summary',
-			__( 'PostHog — last 7 days', 'pressed-hog' ),
+			__( 'Pressed Hog — last 7 days', 'pressed-hog-analytics-for-posthog' ),
 			array( __CLASS__, 'render_widget' )
 		);
 	}
@@ -422,16 +438,16 @@ class Pressed_Hog_Analytics {
 		if ( ! self::is_configured() ) {
 			printf(
 				'<p>%s <a href="%s">%s</a></p>',
-				esc_html__( 'Connect a personal API key to see stats here.', 'pressed-hog' ),
+				esc_html__( 'Connect a personal API key to see stats here.', 'pressed-hog-analytics-for-posthog' ),
 				esc_url( admin_url( 'admin.php?page=pressed-hog-analytics' ) ),
-				esc_html__( 'Set up', 'pressed-hog' )
+				esc_html__( 'Set up', 'pressed-hog-analytics-for-posthog' )
 			);
 			return;
 		}
 
 		$summary = self::get_summary( 7 );
 		if ( is_wp_error( $summary ) ) {
-			printf( '<p>%s</p>', esc_html__( 'Could not fetch data from PostHog right now.', 'pressed-hog' ) );
+			printf( '<p>%s</p>', esc_html__( 'Could not fetch data from PostHog right now.', 'pressed-hog-analytics-for-posthog' ) );
 			return;
 		}
 
@@ -439,23 +455,20 @@ class Pressed_Hog_Analytics {
 		printf(
 			'<div class="ph-widget-tile"><span class="ph-widget-tile__value">%s</span><span class="ph-widget-tile__label">%s</span>%s</div>',
 			esc_html( number_format_i18n( $summary['pageviews'] ) ),
-			esc_html__( 'Pageviews', 'pressed-hog' ),
-			self::render_delta( $summary['pageviews'], $summary['prev_pageviews'] ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts.
+			esc_html__( 'Pageviews', 'pressed-hog-analytics-for-posthog' ),
+			wp_kses( self::render_delta( $summary['pageviews'], $summary['prev_pageviews'] ), self::delta_allowed_html() )
 		);
 		printf(
 			'<div class="ph-widget-tile"><span class="ph-widget-tile__value">%s</span><span class="ph-widget-tile__label">%s</span>%s</div>',
 			esc_html( number_format_i18n( $summary['visitors'] ) ),
-			esc_html__( 'Unique visitors', 'pressed-hog' ),
-			self::render_delta( $summary['visitors'], $summary['prev_visitors'] ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts.
+			esc_html__( 'Unique visitors', 'pressed-hog-analytics-for-posthog' ),
+			wp_kses( self::render_delta( $summary['visitors'], $summary['prev_visitors'] ), self::delta_allowed_html() )
 		);
 		echo '</div>';
 		printf(
 			'<p><a href="%s">%s</a></p>',
 			esc_url( admin_url( 'admin.php?page=pressed-hog-analytics' ) ),
-			esc_html__( 'View full analytics →', 'pressed-hog' )
+			esc_html__( 'View full analytics →', 'pressed-hog-analytics-for-posthog' )
 		);
-
-		// Minimal styling so the widget doesn't need the full stylesheet.
-		echo '<style>.ph-widget-tiles{display:flex;gap:24px;margin:4px 0 8px}.ph-widget-tile__value{display:block;font-size:22px;font-weight:600;line-height:1.2}.ph-widget-tile__label{display:block;color:#646970}.ph-delta--up{color:#006300}.ph-delta--down{color:#d03b3b}.ph-delta--none{color:#898781}</style>';
 	}
 }
