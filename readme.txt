@@ -4,7 +4,7 @@ Tags: posthog, analytics, feature flags, woocommerce, cookie consent
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.3.2
+Stable tag: 0.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -106,6 +106,9 @@ It is stored in its own non-autoloaded WordPress option. Public tracking request
 6. The built-in cookie consent banner.
 
 == Changelog ==
+
+= 0.3.3 =
+* The plugin and author links now go to hopkinsaction.com, with a set-up guide.
 
 = 0.3.2 =
 * The optional PostHog shared dashboard is now linked from the analytics page instead of embedded in an iframe.

@@ -1,12 +1,13 @@
 <?php
 /**
  * Plugin Name:       Pressed Hog – Analytics for PostHog
- * Plugin URI:        https://github.com/ookpassant/pressed-hog
+ * Plugin URI:        https://hopkinsaction.com/services/set-up/posthog-wordpress/
  * Description:       Connect WordPress to PostHog: analytics snippet, user identification, WooCommerce events, feature flags, and cookie consent.
- * Version:           0.3.2
+ * Version:           0.3.3
  * Requires at least: 6.0
  * Requires PHP:      7.4
- * Author:            sea
+ * Author:            Hopkins Action
+ * Author URI:        https://hopkinsaction.com/
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       pressed-hog-analytics-for-posthog
@@ -16,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PRESSED_HOG_VERSION', '0.3.2' );
+define( 'PRESSED_HOG_VERSION', '0.3.3' );
 define( 'PRESSED_HOG_FILE', __FILE__ );
 define( 'PRESSED_HOG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRESSED_HOG_URL', plugin_dir_url( __FILE__ ) );
