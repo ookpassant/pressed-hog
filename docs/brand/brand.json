@@ -1,4 +1,8 @@
 {
   "name": "Pressed Hog",
-  "lines": [ "PostHog analytics for WordPress.", "Free and open source." ]
+  "lines": [
+    "PostHog analytics for WordPress.",
+    "Free and open source."
+  ],
+  "banner": "letterpress"
 }

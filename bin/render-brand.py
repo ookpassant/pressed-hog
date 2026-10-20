@@ -4,7 +4,8 @@
 Source: docs/brand/icon.png (square artwork, white on black, 256px or larger)
         docs/brand/brand.json (name and the two banner lines)
 Output: .wordpress-org/icon-256x256.png, icon-128x128.png,
-        banner-1544x500.png, banner-772x250.png,
+        banner-1544x500.png, banner-772x250.png (unless brand.json sets
+        "banner": "letterpress"; see docs/brand/letterpress/),
         and the plugin's own copy of the icon, if brand.json names a
         plugin_icon path.
 
@@ -49,6 +50,10 @@ def main():
     if brand.get("plugin_icon"):
         size = brand["plugin_icon"]["size"]
         icon.resize((size, size), Image.LANCZOS).save(os.path.join(ROOT, brand["plugin_icon"]["path"]), optimize=True)
+
+    if brand.get("banner") == "letterpress":
+        print("Rendered icons into .wordpress-org/; banners come from docs/brand/letterpress/ (left as they are).")
+        return
 
     # Banner, drawn at 1544x500 and halved for 772x250.
     w, h = 1544, 500

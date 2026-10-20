@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Fell;src:url(fonts/IMFeENrm28P.ttf)}
+@font-face{font-family:FellSC;src:url(fonts/IMFeENsc28P.ttf)}
+@font-face{font-family:FellIt;src:url(fonts/IMFeENit28P.ttf)}
+html,body{margin:0;background:#000}
+.b{position:relative;width:1544px;height:500px;background:#000;color:#f4f1ea;overflow:hidden;transform-origin:0 0}
+.frame{position:absolute;inset:18px;border:3px solid #f4f1ea}
+.frame::after{content:"";position:absolute;inset:7px;border:1px solid #f4f1ea}
+.art{position:absolute;right:58px;top:34px;height:432px;width:432px;background:url(../icon.png) center/contain no-repeat}
+.txt{position:absolute;left:104px;top:0;bottom:0;width:860px;display:flex;flex-direction:column;justify-content:center}
+.kicker{font-family:FellSC;font-size:30px;letter-spacing:.32em;margin-bottom:6px}
+h1{font-family:Fell;font-weight:400;font-size:150px;line-height:.95;margin:0;letter-spacing:-.01em}
+.rule{display:flex;align-items:center;gap:18px;margin:22px 0 18px;width:700px}
+.rule i{flex:1;height:0;border-top:2px solid #f4f1ea}
+.rule b{font-family:Fell;font-weight:400;font-size:26px;line-height:1}
+.sub{font-family:FellIt;font-size:50px;line-height:1.05}
+.tags{font-family:FellSC;font-size:25px;letter-spacing:.14em;margin-top:22px;opacity:.85;white-space:nowrap}
+</style></head><body><div class="b"><div class="frame"></div>
+<div class="txt">
+<div class="kicker">A WordPress Plugin</div>
+<h1>Pressed Hog</h1>
+<div class="rule"><i></i><b>&#10086;</b><i></i></div>
+<div class="sub">Analytics for PostHog</div>
+<div class="tags">Pageviews &middot; Session replay &middot; Feature flags &middot; WooCommerce</div>
+</div><div class="art"></div></div>
+<script>const z=new URLSearchParams(location.search).get('z');if(z)document.querySelector('.b').style.transform='scale('+z+')';</script>
+</body></html>
