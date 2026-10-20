@@ -1,25 +1,59 @@
 name: Build & release plugin zip
 
-# Builds an install-ready WordPress plugin zip and attaches it to a GitHub
-# Release whenever a v* tag is pushed. The zip unpacks to a single
-# `pressed-hog-analytics-for-posthog/` folder (the WordPress.org slug), with
-# forward-slash paths and LF line endings, so it can be uploaded straight
-# through Plugins -> Add New -> Upload Plugin.
+# Builds an install-ready WordPress plugin zip, attaches it to a GitHub
+# Release, and (when WPORG_DEPLOY is "true") publishes it to wordpress.org.
+# The zip unpacks to a single `pressed-hog-analytics-for-posthog/` folder (the
+# WordPress.org slug), so it can also be uploaded through Plugins > Add New.
+#
+# Run it from the Actions tab (Run workflow, enter the version), or push a
+# tag such as v0.3.3. The version must match the plugin header and the
+# readme's Stable tag.
+#
+# For wordpress.org, set once (Settings > Secrets and variables > Actions):
+#   Secrets:   SVN_USERNAME (seainthetrees) and SVN_PASSWORD (the SVN
+#              password from your wordpress.org profile, Account & Security)
+#   Variables: WPORG_DEPLOY = true
+# It commits the code to SVN trunk, tags the version, and updates the icon
+# and banners from .wordpress-org/.
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 0.3.3'
+        required: true
 
 permissions:
   contents: write
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      SLUG: pressed-hog-analytics-for-posthog
     steps:
-      - name: Check out the tag
-        uses: actions/checkout@v4
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Work out the version
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          HEADER="$(sed -n 's/^ \* Version:[[:space:]]*//p' pressed-hog.php | head -1 | tr -d '[:space:]')"
+          STABLE="$(sed -n 's/^Stable tag:[[:space:]]*//p' readme.txt | tr -d '[:space:]')"
+          echo "Release ${VERSION} (header ${HEADER}, Stable tag ${STABLE})"
+          if [ "${VERSION}" != "${HEADER}" ] || [ "${VERSION}" != "${STABLE}" ]; then
+            echo "::error::Version mismatch. Set the Version header in pressed-hog.php and Stable tag in readme.txt to ${VERSION}, commit, then release."
+            exit 1
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
 
       - name: Lint PHP
         run: |
@@ -30,37 +64,35 @@ jobs:
       - name: Build plugin zip
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          SLUG="pressed-hog-analytics-for-posthog"
-          MAIN_FILE="pressed-hog.php"
-
-          # Confirm the plugin header version matches the tag, so a mistagged
-          # release fails loudly instead of shipping the wrong version.
-          HEADER_VERSION="$(sed -n 's/^ \* Version:[[:space:]]*//p' "${MAIN_FILE}" | head -1 | tr -d '[:space:]')"
-          if [ "${HEADER_VERSION}" != "${VERSION}" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} (=${VERSION}) does not match plugin header version ${HEADER_VERSION}"
-            exit 1
-          fi
-
           rm -rf build
           mkdir build
           # Export exactly the committed tree into build/${SLUG}/ …
           git archive --format=tar --prefix="${SLUG}/" HEAD | tar -x -C build
           # … then drop files that don't belong in a runtime distributable.
           rm -rf "build/${SLUG}/docs" "build/${SLUG}/.github" "build/${SLUG}/.wordpress-org" "build/${SLUG}/bin"
-
           ( cd build && zip -rq "../${SLUG}-${VERSION}.zip" "${SLUG}" )
           echo "ASSET=${SLUG}-${VERSION}.zip" >> "$GITHUB_ENV"
 
-      - name: Create or update the release
+      - name: Create or update the GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
-            gh release upload "${GITHUB_REF_NAME}" "${ASSET}" --clobber
+          TAG="v${VERSION}"
+          if gh release view "${TAG}" > /dev/null 2>&1; then
+            gh release upload "${TAG}" "${ASSET}" --clobber
           else
-            gh release create "${GITHUB_REF_NAME}" "${ASSET}" \
-              --title "Pressed Hog ${GITHUB_REF_NAME}" \
-              --generate-notes
+            gh release create "${TAG}" "${ASSET}" --target "${GITHUB_SHA}" \
+              --title "Pressed Hog ${TAG}" --generate-notes
           fi
+
+      - name: Publish to wordpress.org
+        if: vars.WPORG_DEPLOY == 'true'
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: ${{ env.SLUG }}
+          VERSION: ${{ env.VERSION }}
+          BUILD_DIR: build/${{ env.SLUG }}
+          ASSETS_DIR: .wordpress-org
